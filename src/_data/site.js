@@ -7,6 +7,12 @@ export default {
   memorial: "این سایت با فونت ساحل نوشته شده؛ به یاد صابر راستی‌کردار.",
   // the five buttons under the header
   // `tags`: posts with any of these tags light up the button
+  // links under the text on /me, shown as icons
+  social: [
+    { name: "تلگرام", icon: "telegram", url: "https://t.me/hefzonashr" },
+    { name: "اینستاگرام", icon: "instagram", url: "https://instagram.com/mamarezow" },
+    { name: "لینکدین", icon: "linkedin", url: "https://www.linkedin.com/in/mohammadreza-lotfalizade-3341a6167/" }
+  ],
   pills: [
     { label: "جستار", url: "/essay/", tags: ["essay"] },
     { label: "یادداشت", url: "/note/", tags: ["note"] },
