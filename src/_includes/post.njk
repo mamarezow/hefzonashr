@@ -1,0 +1,43 @@
+{%- extends "base.njk" -%}
+{%- set ogType = "article" -%}
+{%- set description = subtitle or (collections.posts | byUrl(page.url) | teaser) -%}
+{%- block meta %}
+<meta property="article:published_time" content="{{ page.date | iso }}">
+<meta property="article:author" content="{{ site.author }}">
+<meta name="author" content="{{ site.author }}">
+{%- for k in tags %}{% if site.tags[k] %}
+<meta property="article:tag" content="{{ site.tags[k] }}">{% endif %}{% endfor %}
+{%- endblock %}
+{%- block main %}
+{%- set shortUrl = site.domain + "/p/" + telegram -%}
+{%- set prev = collections.posts | older(page.url) -%}
+{%- set next = collections.posts | newer(page.url) -%}
+<article>
+  <header>
+    <h1>{{ title }}</h1>
+    {%- if subtitle %}
+    <h2>{{ subtitle }}</h2>
+    {%- endif %}
+  </header>
+  {%- if form == "poem" %}
+  <div class="body poem">{{ page.rawInput | trim | escape }}</div>
+  {%- else %}
+  <div class="body prose">{{ content | safe }}</div>
+  {%- endif %}
+  <footer class="postfoot">
+    <span>نوشته شده در <time datetime="{{ page.date | iso }}">{{ page.date | jdate }}</time></span>
+    <div class="row">
+      <span class="tags">{% for k in tags %}{% if site.tags[k] %}<a class="tag" href="/{{ k }}/" rel="tag">{{ site.tags[k] }}</a>{% endif %}{% endfor %}</span>
+      {%- if telegram %}
+      <button class="copy" type="button" data-copy="https://{{ shortUrl }}" aria-label="کپی لینک کوتاه">{{ icons.link | safe }}<span class="u">{{ shortUrl }}</span></button>
+      {%- endif %}
+    </div>
+  </footer>
+</article>
+<nav class="pn" aria-label="نوشته‌های دیگر">
+  {%- if prev %}<a class="ibtn" href="{{ prev.url }}" rel="prev" aria-label="نوشتهٔ قبلی: {{ prev.data.title }}" title="{{ prev.data.title }}">{{ icons.right | safe }}</a>
+  {%- else %}<span class="ibtn off" aria-hidden="true">{{ icons.right | safe }}</span>{% endif %}
+  {%- if next %}<a class="ibtn" href="{{ next.url }}" rel="next" aria-label="نوشتهٔ بعدی: {{ next.data.title }}" title="{{ next.data.title }}">{{ icons.left | safe }}</a>
+  {%- else %}<span class="ibtn off" aria-hidden="true">{{ icons.left | safe }}</span>{% endif %}
+</nav>
+{%- endblock %}

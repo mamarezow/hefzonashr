@@ -1,0 +1,15 @@
+---
+layout: base.njk
+pagination:
+  data: collections.posts
+  size: 10
+  alias: items
+permalink: "{% if pagination.pageNumber > 0 %}/page/{{ pagination.pageNumber + 1 }}/{% else %}/{% endif %}"
+---
+{% include "postlist.njk" %}
+{%- if pagination.href.next or pagination.href.previous %}
+<div class="more">
+  {%- if pagination.href.previous %}<a class="ibtn" href="{{ pagination.href.previous }}" aria-label="نوشته‌های تازه‌تر" title="نوشته‌های تازه‌تر">{{ icons.up | safe }}</a>{% endif %}
+  {%- if pagination.href.next %}<a class="ibtn" href="{{ pagination.href.next }}" aria-label="نوشته‌های قدیمی‌تر" title="نوشته‌های قدیمی‌تر">{{ icons.down | safe }}</a>{% endif %}
+</div>
+{%- endif %}
