@@ -4,7 +4,7 @@ title: آهای نیمهٔ اسفند
 date: 2024-09-27T14:45:50+03:30
 telegram: 184
 form: poem
-tags: [taraneh]
+tags: [poeticwords]
 ---
 آهای نیمه اسفند
 وفور ابر بهاری
