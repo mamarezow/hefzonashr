@@ -1,6 +1,6 @@
 // Sign in with GitHub, step 1: send the browser to GitHub's consent page.
-// Sveltia CMS opens this in a popup as /auth?provider=github.
-// Needs GITHUB_CLIENT_ID (and GITHUB_CLIENT_SECRET for /callback) in the Cloudflare Pages settings.
+// Sveltia CMS opens this in a popup as /auth?provider=github; src/worker.js routes it here.
+// Needs GITHUB_CLIENT_ID (and GITHUB_CLIENT_SECRET for /callback) in the Worker's settings.
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   if (url.searchParams.get("provider") !== "github") return new Response("Unsupported provider", { status: 400 });
