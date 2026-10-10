@@ -21,6 +21,14 @@ Tag keys: `essay` جستار، `note` یادداشت، `poem` شعر، `song` ت
 
 Dates are shown as month and year only.
 
+## Admin panel
+
+[admin.hefzonashr.ir](https://admin.hefzonashr.ir) runs [Sveltia CMS](https://github.com/sveltia/sveltia-cms) from `admin/`, hosted as a Cloudflare Worker (`admin/wrangler.jsonc`: Worker `hefzonashr-admin`, root directory `admin`, deploy command `npx wrangler deploy`, no build command). Each save in the panel is a commit to `main`, which rebuilds the site.
+
+- `admin/public/config.yml`: the panel's fields. Two lists over the same `src/posts/` folder: شعر و ترانه (`form: poem`, plain text box so lines stay exactly as typed) and جستار و یادداشت (`form: prose`, Markdown editor). Keep the tag options in step with `src/_data/site.js`. A third list, صفحه‌ها, edits the about page `src/me.md` (/me/). Posts for چیزهای دیگر are ordinary posts tagged `otherthings`.
+- `admin/src/`: «ورود با گیت‌هاب». `worker.js` serves `admin/public/` and routes `/auth` and `/callback`; `/auth` sends the browser to GitHub and `/callback` hands the token back to the panel. They read `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` from the Worker's settings; the GitHub OAuth app's callback URL is `https://admin.hefzonashr.ir/callback`.
+- New posts get a file name like `poem-20261010` unless a Latin name is typed in the panel's Slug side panel when creating it.
+
 ## Local preview
 
 ```sh
