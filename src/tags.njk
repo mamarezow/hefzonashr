@@ -9,7 +9,8 @@ eleventyComputed:
   pill: "/{{ key }}/"
 permalink: "/{{ key }}/"
 ---
-<div class="catHead"><h1>{{ title }}</h1></div>
+{#- no visible heading: the highlighted pill or the tag you clicked says where you are -#}
+<h1 class="sr">{{ title }}</h1>
 {%- set items = collections.posts | withTag(key) %}
 {%- if items.length %}
 {% include "postlist.njk" %}
