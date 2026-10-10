@@ -1,23 +1,31 @@
 const TZ = "Asia/Tehran";
-const faDate = new Intl.DateTimeFormat("fa-IR", { calendar: "persian", day: "numeric", month: "long", year: "numeric", timeZone: TZ });
+// dates are shown as month and year only («اردیبهشت ۱۳۹۹»), never the day
+const faDate = new Intl.DateTimeFormat("fa-IR", { calendar: "persian", month: "long", year: "numeric", timeZone: TZ });
+const ym = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", timeZone: TZ });
 
 export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/fonts": "fonts", "src/css": "css", "src/js": "js", "src/CNAME": "CNAME", "src/.nojekyll": ".nojekyll" });
 
-  // all posts, newest first
+  // all posts, newest first; posts sharing a timestamp keep channel order
   eleventyConfig.addCollection("posts", api =>
-    api.getFilteredByGlob("src/posts/*.md").sort((a, b) => b.date - a.date));
+    api.getFilteredByGlob("src/posts/*.md").sort((a, b) => (b.date - a.date) || ((b.data.telegram || 0) - (a.data.telegram || 0))));
 
   // posts that came from the Telegram channel get a short link /p/<message id>/
   eleventyConfig.addCollection("shortlinked", api =>
     api.getFilteredByGlob("src/posts/*.md").filter(p => p.data.telegram));
 
-  // «۲۱ اسفند ۱۴۰۴»
-  eleventyConfig.addFilter("jdate", d => faDate.format(d));
-  eleventyConfig.addFilter("iso", d => d.toISOString());
+  eleventyConfig.addFilter("jdate", d => {
+    const parts = Object.fromEntries(faDate.formatToParts(d).map(p => [p.type, p.value]));
+    return `${parts.month} ${parts.year}`;
+  });
+  // machine-readable date at the same precision: 2020-05
+  eleventyConfig.addFilter("iso", d => ym.format(d));
 
   // posts carrying a given tag key
-  eleventyConfig.addFilter("withTag", (posts, key) => posts.filter(p => (p.data.tags || []).includes(key)));
+  eleventyConfig.addFilter("withTag", (posts, keys) => {
+    keys = [].concat(keys);
+    return posts.filter(p => (p.data.tags || []).some(t => keys.includes(t)));
+  });
 
   // one-line teaser for lists: front-matter `excerpt`, else the first non-empty line of the text
   eleventyConfig.addFilter("teaser", post => {

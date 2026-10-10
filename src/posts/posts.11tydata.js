@@ -4,9 +4,8 @@ export default {
   eleventyComputed: {
     // light up the header button of the post's section, if it has one
     pill: data => {
-      const urls = data.site.pills.map(p => p.url);
-      const k = (data.tags || []).find(k => urls.includes(`/${k}/`));
-      return k ? `/${k}/` : "";
+      const pill = data.site.pills.find(p => p.tags.some(t => (data.tags || []).includes(t)));
+      return pill ? pill.url : "";
     }
   }
 };
