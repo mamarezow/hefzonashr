@@ -1,0 +1,14 @@
+---
+permalink: /sitemap.xml
+eleventyExcludeFromCollections: true
+---
+{#- every page Google should know about: home, posts, the section pages and one page per tag -#}
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{%- for p in collections.all %}{% if p.url == "/" or not p.data.pagination %}
+  <url><loc>{{ site.url }}{{ p.url }}</loc></url>
+{%- endif %}{% endfor %}
+{%- for key, label in site.tags %}
+  <url><loc>{{ site.url }}/{{ key }}/</loc></url>
+{%- endfor %}
+</urlset>
