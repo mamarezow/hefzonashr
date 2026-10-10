@@ -103,3 +103,21 @@ collections:
         buttons: [bold, italic, link, quote, heading-three]
         editor_components: []
         hint: پاراگراف‌ها را با یک سطر خالی (Enter) جدا کن.
+
+  - name: pages
+    label: صفحه‌ها
+    files:
+      - name: me
+        label: محمدرضا
+        file: src/me.md
+        fields:
+          - { name: layout, widget: hidden, default: about.njk }
+          - { name: title, label: عنوان, widget: string }
+          - { name: pill, widget: hidden, default: /me/ }
+          - { name: permalink, widget: hidden, default: /me/ }
+          - name: body
+            label: متن
+            widget: markdown
+            modes: [rich_text, raw]
+            buttons: [bold, italic, link, quote, heading-three, bulleted-list]
+            editor_components: []

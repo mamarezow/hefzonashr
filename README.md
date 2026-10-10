@@ -25,7 +25,7 @@ Dates are shown as month and year only.
 
 [admin.hefzonashr.ir](https://admin.hefzonashr.ir) runs [Sveltia CMS](https://github.com/sveltia/sveltia-cms) from `admin/`, hosted on Cloudflare Pages (root directory `admin`, no build command, output directory `public`). Each save in the panel is a commit to `main`, which rebuilds the site.
 
-- `admin/public/config.yml`: the panel's fields. Two lists over the same `src/posts/` folder: شعر و ترانه (`form: poem`, plain text box so lines stay exactly as typed) and جستار و یادداشت (`form: prose`, Markdown editor). Keep the tag options in step with `src/_data/site.js`.
+- `admin/public/config.yml`: the panel's fields. Two lists over the same `src/posts/` folder: شعر و ترانه (`form: poem`, plain text box so lines stay exactly as typed) and جستار و یادداشت (`form: prose`, Markdown editor). Keep the tag options in step with `src/_data/site.js`. A third list, صفحه‌ها, edits the about page `src/me.md` (/me/). Posts for چیزهای دیگر are ordinary posts tagged `otherthings`.
 - `admin/functions/`: «ورود با گیت‌هاب». `/auth` sends the browser to GitHub and `/callback` hands the token back to the panel. They read `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` from the Cloudflare Pages settings; the GitHub OAuth app's callback URL is `https://admin.hefzonashr.ir/callback`.
 - New posts get a file name like `poem-20261010` unless a Latin name is typed in the panel's Slug side panel when creating it.
 
