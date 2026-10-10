@@ -1,9 +1,16 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+
 const TZ = "Asia/Tehran";
 // dates are shown as month and year only («اردیبهشت ۱۳۹۹»), never the day
 const faDate = new Intl.DateTimeFormat("fa-IR", { calendar: "persian", month: "long", year: "numeric", timeZone: TZ });
 const ym = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", timeZone: TZ });
 
 export default function (eleventyConfig) {
+  // ?v=<hash> on css/js links, so browsers drop a cached copy as soon as the file changes
+  eleventyConfig.addFilter("v", path =>
+    `${path}?v=${createHash("md5").update(readFileSync(`src${path}`)).digest("hex").slice(0, 8)}`);
+
   eleventyConfig.addPassthroughCopy({ "src/fonts": "fonts", "src/css": "css", "src/js": "js", "src/CNAME": "CNAME", "src/.nojekyll": ".nojekyll" });
 
   // all posts, newest first; posts sharing a timestamp keep channel order
