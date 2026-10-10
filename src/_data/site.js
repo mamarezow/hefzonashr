@@ -9,7 +9,7 @@ export default {
   pills: [
     { label: "جستار", url: "/essay/" },
     { label: "یادداشت", url: "/note/" },
-    { label: "ترانه", url: "/poeticwords/" },
+    { label: "شاعرانه", url: "/poeticwords/" },
     { label: "چیزهای دیگر", url: "/otherthings/" },
     { label: "محمدرضا", url: "/me/" }
   ],
@@ -24,5 +24,5 @@ export default {
     otherthings: "دیگر"
   },
   // heading on a tag's page when it differs from the tag label
-  tagTitles: { otherthings: "چیزهای دیگر" }
+  tagTitles: { poeticwords: "شاعرانه", otherthings: "چیزهای دیگر" }
 };
