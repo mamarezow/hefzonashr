@@ -39,7 +39,7 @@ eleventyExcludeFromCollections: true
   {%- else %}
   <div class="body prose">{{ post.content | safe }}</div>
   {%- endif %}
-  <footer class="postfoot"><span>نوشته شده در <time datetime="{{ post.date | iso }}">{{ post.date | jdate }}</time></span></footer>
+  <footer class="postfoot"><span><time datetime="{{ post.date | iso }}">{{ post.date | jdate }}</time></span></footer>
 </article>
 </body>
 </html>

@@ -26,7 +26,6 @@
   <div class="body prose">{{ content | safe }}</div>
   {%- endif %}
   <footer class="postfoot">
-    <span>نوشته شده در <time datetime="{{ page.date | iso }}">{{ page.date | jdate }}</time></span>
     <div class="row">
       <span class="tags">{% for k in tags %}{% if site.tags[k] %}<a class="tag" href="/{{ k }}/" rel="tag">{{ site.tags[k] }}</a>{% endif %}{% endfor %}</span>
       {%- if telegram %}
@@ -38,6 +37,7 @@
 <nav class="pn" aria-label="نوشته‌های دیگر">
   {%- if prev %}<a class="ibtn" href="{{ prev.url }}" rel="prev" aria-label="نوشتهٔ قبلی: {{ prev.data.title }}" title="{{ prev.data.title }}">{{ icons.right | safe }}</a>
   {%- else %}<span class="ibtn off" aria-hidden="true">{{ icons.right | safe }}</span>{% endif %}
+  <time class="when" datetime="{{ page.date | iso }}">{{ page.date | jdate }}</time>
   {%- if next %}<a class="ibtn" href="{{ next.url }}" rel="next" aria-label="نوشتهٔ بعدی: {{ next.data.title }}" title="{{ next.data.title }}">{{ icons.left | safe }}</a>
   {%- else %}<span class="ibtn off" aria-hidden="true">{{ icons.left | safe }}</span>{% endif %}
 </nav>
