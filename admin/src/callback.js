@@ -22,14 +22,25 @@ export async function onRequestGet({ request, env }) {
   const status = result.token ? "success" : "error";
   const message = `authorization:github:${status}:${JSON.stringify({ provider: "github", ...result })}`;
   // JSON-encode for the script, and keep "<" out of it so nothing can close the tag
-  const literal = JSON.stringify(message).replaceAll("<", "\\u003c");
-  const html = `<!doctype html><meta charset="utf-8"><title>…</title><script>
+  const js = value => JSON.stringify(value).replaceAll("<", "\\u003c");
+  const html = `<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ورود</title><body style="font: 16px/1.8 system-ui, sans-serif; padding: 24px"><p id="note"></p><script>
 (() => {
-  const msg = ${literal};
+  const msg = ${js(message)}, token = ${js(result.token || "")}, error = ${js(result.error || "")};
+  // also keep the sign-in where the panel looks for it on load, so a reload of the panel works
+  // even when the handshake below can't reach it (the link to the opening window can be lost
+  // while the popup is on github.com)
+  if (token) try { localStorage.setItem("sveltia-cms.user", JSON.stringify({ backendName: "github", token })); } catch (e) {}
   window.addEventListener("message", e => {
     if (e.origin === location.origin && e.data === "authorizing:github") window.opener.postMessage(msg, location.origin);
   }, { once: true });
   if (window.opener) window.opener.postMessage("authorizing:github", location.origin);
+  // the panel closes this window when the handshake works; if it is still open, say what to do
+  setTimeout(() => {
+    document.getElementById("note").textContent = token
+      ? "وارد شدی. این پنجره را ببند و صفحهٔ پنل را یک بار تازه کن (Reload)."
+      : "ورود انجام نشد: " + error;
+  }, window.opener ? 2500 : 0);
 })();
 </script>`;
   return new Response(html, {
