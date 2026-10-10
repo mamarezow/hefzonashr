@@ -43,6 +43,12 @@ export default function (eleventyConfig) {
     return plain.slice(0, plain.lastIndexOf(" ", 160)) + "…";
   });
 
+  // a poem as stanzas (<p>) of lines (<br>): same look as the plain text, and readers that
+  // ignore CSS, like Telegram Instant View, keep every line break
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  eleventyConfig.addFilter("poemHtml", raw => raw.replace(/\r/g, "").trim().split(/\n[ \t]*\n/)
+    .map(st => `<p>${st.split("\n").map(esc).join("<br>\n")}</p>`).join("\n"));
+
   // newest-first collection: «previous» is the older post, «next» the newer one
   eleventyConfig.addFilter("older", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i >= 0 ? posts[i + 1] : undefined; });
   eleventyConfig.addFilter("newer", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i > 0 ? posts[i - 1] : undefined; });

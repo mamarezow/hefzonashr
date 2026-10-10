@@ -5,6 +5,7 @@
 <meta property="article:published_time" content="{{ page.date | iso }}">
 <meta property="article:author" content="{{ site.author }}">
 <meta name="author" content="{{ site.author }}">
+<meta property="telegram:channel" content="@hefzonashr">
 {%- for k in tags %}{% if site.tags[k] %}
 <meta property="article:tag" content="{{ site.tags[k] }}">{% endif %}{% endfor %}
 {%- endblock %}
@@ -20,7 +21,7 @@
     {%- endif %}
   </header>
   {%- if form == "poem" %}
-  <div class="body poem">{{ page.rawInput | trim | escape }}</div>
+  <div class="body poem">{{ page.rawInput | poemHtml | safe }}</div>
   {%- else %}
   <div class="body prose">{{ content | safe }}</div>
   {%- endif %}

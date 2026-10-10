@@ -69,7 +69,9 @@ article { margin-top: 30px; }
 article > header h1 { font-size: 1.3rem; font-weight: 600; line-height: 1.7; }
 article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); margin-top: 2px; }
 .body { margin-top: 22px; }
-.poem { white-space: pre-line; line-height: 2.25; }
+.poem { line-height: 2.25; }
+.poem p { margin: 0 0 2.25em; }
+.poem p:last-child { margin: 0; }
 .prose p { text-align: justify; margin: 0 0 1em; }
 .prose .ln { display: block; white-space: nowrap; text-align: justify; text-align-last: justify; }
 .prose .ln.end { text-align: start; text-align-last: auto; }
