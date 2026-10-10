@@ -1,5 +1,5 @@
 ---
-title: عینیت
+title: عینیّت
 date: 2024-11-24T16:10:00+03:30
 telegram: 186
 form: prose
