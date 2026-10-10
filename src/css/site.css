@@ -63,8 +63,7 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .meta { font-size: .82rem; color: var(--muted); }
 .empty { margin-top: 26px; text-align: center; color: var(--muted); }
 .more { margin-top: 18px; display: flex; justify-content: center; gap: 10px; }
-.catHead { margin-top: 26px; text-align: center; }
-.catHead h1 { font-size: 1.2rem; font-weight: 600; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 article { margin-top: 30px; }
 article > header h1 { font-size: 1.3rem; font-weight: 600; line-height: 1.7; }
