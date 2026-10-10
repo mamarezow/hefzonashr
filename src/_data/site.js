@@ -11,7 +11,7 @@ export default {
   social: [
     { name: "تلگرام", icon: "telegram", url: "https://t.me/hefzonashr" },
     { name: "اینستاگرام", icon: "instagram", url: "https://instagram.com/mamarezow" },
-    { name: "لینکدین", icon: "linkedin", url: "https://www.linkedin.com/in/mohammadreza-lotfalizade-3341a6167/" }
+    { name: "لینکدین", icon: "linkedin", url: "https://www.linkedin.com/in/mamareza" }
   ],
   pills: [
     { label: "جستار", url: "/essay/", tags: ["essay"] },
