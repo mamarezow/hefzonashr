@@ -36,8 +36,6 @@ export default function (eleventyConfig) {
     return plain.slice(0, plain.lastIndexOf(" ", 160)) + "…";
   });
 
-  eleventyConfig.addFilter("byUrl", (posts, url) => posts.find(p => p.url === url));
-
   // newest-first collection: «previous» is the older post, «next» the newer one
   eleventyConfig.addFilter("older", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i >= 0 ? posts[i + 1] : undefined; });
   eleventyConfig.addFilter("newer", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i > 0 ? posts[i - 1] : undefined; });
