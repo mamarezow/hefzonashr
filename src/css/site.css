@@ -86,7 +86,7 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 .about p { color: var(--muted); }
 .about .social { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
 .about .social .ibtn { width: 30px; height: 30px; border-radius: 9px; }
-.about .social svg { width: 15px; height: 15px; }
+.about .social svg { width: 17px; height: 17px; }
 
 footer.foot { margin-top: auto; padding-top: 40px; font-size: .8rem; color: var(--muted); text-align: center; }
 footer.foot span { display: block; border-top: 1px solid var(--rule); padding-top: 12px; }
