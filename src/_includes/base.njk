@@ -1,5 +1,6 @@
 {%- set pageTitle = (title + " | " + site.title) if title else site.title -%}
-{%- set desc = description or site.description -%}
+{#- posts pass their subtitle (or nothing); other pages use the site description -#}
+{%- set desc = description if description is defined else site.description -%}
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>

@@ -1,0 +1,10 @@
+---
+layout: base.njk
+title: شاعرانه
+pill: /poeticwords/
+permalink: /poeticwords/
+---
+{#- poems and songs together -#}
+<div class="catHead"><h1>{{ title }}</h1></div>
+{%- set items = collections.posts | withTag(["poem", "song"]) %}
+{% include "postlist.njk" %}

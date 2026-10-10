@@ -87,3 +87,13 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 
 footer.foot { margin-top: auto; padding-top: 40px; font-size: .8rem; color: var(--muted); text-align: center; }
 footer.foot span { display: block; border-top: 1px solid var(--rule); padding-top: 12px; }
+
+/* desktop: a wider column and slightly larger type; phones keep the sizes above */
+@media (min-width: 1000px) {
+  body { font-size: 17.5px; }
+  .col { max-width: 42rem; }
+}
+@media (min-width: 1400px) {
+  body { font-size: 18.5px; }
+  .col { max-width: 46rem; }
+}

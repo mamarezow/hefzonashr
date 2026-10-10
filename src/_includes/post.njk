@@ -1,6 +1,6 @@
 {%- extends "base.njk" -%}
 {%- set ogType = "article" -%}
-{%- set description = subtitle or (collections.posts | byUrl(page.url) | teaser) -%}
+{%- set description = subtitle or "" -%}
 {%- block meta %}
 <meta property="article:published_time" content="{{ page.date | iso }}">
 <meta property="article:author" content="{{ site.author }}">
