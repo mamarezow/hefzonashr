@@ -1,0 +1,11 @@
+<ul class="list">
+{%- for post in items %}
+  <li>
+    <h2><a href="{{ post.url }}">{{ post.data.title }}</a></h2>
+    <p>{{ post | teaser }}</p>
+    <div class="meta"><time datetime="{{ post.date | iso }}">{{ post.date | jdate }}</time><span class="tags">
+      {%- for k in post.data.tags %}{% if site.tags[k] %}<a class="tag" href="/{{ k }}/">{{ site.tags[k] }}</a>{% endif %}{% endfor -%}
+    </span></div>
+  </li>
+{%- endfor %}
+</ul>

@@ -1,0 +1,27 @@
+---
+pagination:
+  data: collections.shortlinked
+  size: 1
+  alias: post
+permalink: "/p/{{ post.data.telegram }}/"
+eleventyExcludeFromCollections: true
+---
+{#- short link hefzonashr.ir/p/<telegram id>: carries the post's preview tags, then forwards to the full post -#}
+{%- set target = site.url + post.url -%}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>{{ post.data.title }} | {{ site.title }}</title>
+<link rel="canonical" href="{{ target }}">
+<meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:title" content="{{ post.data.title }}">
+<meta property="og:description" content="{{ post.data.subtitle or (post | teaser) }}">
+<meta property="og:url" content="{{ target }}">
+<meta property="og:type" content="article">
+<meta http-equiv="refresh" content="0; url={{ post.url }}">
+<meta name="robots" content="noindex">
+<script>location.replace({{ post.url | dump | safe }})</script>
+</head>
+<body><a href="{{ post.url }}">{{ post.data.title }}</a></body>
+</html>

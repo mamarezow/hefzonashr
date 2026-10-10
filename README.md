@@ -13,11 +13,11 @@ subtitle: optional second line under the title
 date: 2024-11-24T16:10:53+03:30
 telegram: 186          # Telegram message id; gives the short link hefzonashr.ir/p/186
 form: prose            # prose (justified with kashida) or poem (lines kept exactly as written)
-tags: [jostar]         # keys from src/_data/site.js
+tags: [essay]          # keys from src/_data/site.js
 ---
 ```
 
-Tag keys: `jostar` جستار، `yaddasht` یادداشت، `sher` شعر، `taraneh` ترانه، `naqd` نقد، `moarefi` معرفی، `digar` دیگر. Each tag has a page at `/<key>/`; the buttons under the header point at جستار، یادداشت، ترانه، چیزهای دیگر (`/digar/`) and the about page.
+Tag keys: `essay` جستار، `note` یادداشت، `poem` شعر، `poeticwords` ترانه، `critique` نقد، `intro` معرفی، `otherthings` دیگر. Each tag has a page at `/<key>/`; the buttons under the header point at جستار، یادداشت، شاعرانه، چیزهای دیگر (`/essay/`, `/note/`, `/poeticwords/`, `/otherthings/`) and the about page `/me/`.
 
 The three posts in `src/posts/` are temporary samples from the Telegram channel, only there to show the layout.
 

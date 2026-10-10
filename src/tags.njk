@@ -1,0 +1,18 @@
+---
+layout: base.njk
+pagination:
+  data: site.tags
+  size: 1
+  alias: key
+eleventyComputed:
+  title: "{{ site.tagTitles[key] or site.tags[key] }}"
+  pill: "/{{ key }}/"
+permalink: "/{{ key }}/"
+---
+<div class="catHead"><h1>{{ title }}</h1></div>
+{%- set items = collections.posts | withTag(key) %}
+{%- if items.length %}
+{% include "postlist.njk" %}
+{%- else %}
+<p class="empty">هنوز نوشته‌ای اینجا نیست.</p>
+{%- endif %}

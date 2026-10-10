@@ -1,0 +1,42 @@
+{%- set pageTitle = (title + " | " + site.title) if title else site.title -%}
+{%- set desc = description or site.description -%}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ pageTitle }}</title>
+<meta name="description" content="{{ desc }}">
+<link rel="canonical" href="{{ site.url }}{{ page.url }}">
+<meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:title" content="{{ title or site.title }}">
+<meta property="og:description" content="{{ desc }}">
+<meta property="og:url" content="{{ site.url }}{{ page.url }}">
+<meta property="og:locale" content="fa_IR">
+<meta property="og:type" content="{{ ogType or 'website' }}">
+{%- block meta %}{% endblock %}
+<meta name="theme-color" content="#f4f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+<script>try{var t=localStorage.getItem("hefz-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preload" href="/fonts/Sahel-FD.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/site.css">
+<script src="/js/site.js" defer></script>
+</head>
+<body>
+<div class="wrap"><div class="col">
+<header class="top">
+  <a class="brand" href="/">{{ site.title }}</a>
+  <button class="switch" type="button" role="switch" aria-checked="false" aria-label="تم تاریک" data-tgl>{{ icons.sun | safe }}{{ icons.moon | safe }}<span class="knob"></span></button>
+</header>
+<nav class="pills" aria-label="بخش‌ها">
+{%- for p in site.pills %}
+  <a href="{{ p.url }}"{% if p.url == pill %} class="on" aria-current="page"{% endif %}>{{ p.label }}</a>
+{%- endfor %}
+</nav>
+<main>
+{% block main %}{{ content | safe }}{% endblock %}
+</main>
+<footer class="foot"><span>{{ site.memorial }}</span></footer>
+</div></div>
+</body>
+</html>
