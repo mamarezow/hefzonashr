@@ -6,7 +6,8 @@ pagination:
 permalink: "/p/{{ post.data.telegram }}/"
 eleventyExcludeFromCollections: true
 ---
-{#- short link hefzonashr.ir/p/<telegram id>: carries the post's preview tags, then forwards to the full post -#}
+{#- short link hefzonashr.ir/p/<telegram id>: carries the post's preview tags and text (for Telegram Instant View, which
+    does not follow the redirect), then forwards to the full post -#}
 {%- set target = site.url + post.url -%}
 <!doctype html>
 <html lang="fa" dir="rtl">
@@ -19,9 +20,25 @@ eleventyExcludeFromCollections: true
 <meta property="og:description" content="{{ post.data.subtitle or '' }}">
 <meta property="og:url" content="{{ target }}">
 <meta property="og:type" content="article">
+<meta property="telegram:channel" content="@hefzonashr">
 <meta http-equiv="refresh" content="0; url={{ post.url }}">
 <meta name="robots" content="noindex">
 <script>location.replace({{ post.url | dump | safe }})</script>
 </head>
-<body><a href="{{ post.url }}">{{ post.data.title }}</a></body>
+<body>
+<article>
+  <header>
+    <h1><a href="{{ post.url }}">{{ post.data.title }}</a></h1>
+    {%- if post.data.subtitle %}
+    <h2>{{ post.data.subtitle }}</h2>
+    {%- endif %}
+  </header>
+  {%- if post.data.form == "poem" %}
+  <div class="body poem">{{ post.rawInput | poemHtml | safe }}</div>
+  {%- else %}
+  <div class="body prose">{{ post.content | safe }}</div>
+  {%- endif %}
+  <footer class="postfoot"><span>نوشته شده در <time datetime="{{ post.date | iso }}">{{ post.date | jdate }}</time></span></footer>
+</article>
+</body>
 </html>
