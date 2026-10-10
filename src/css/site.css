@@ -83,7 +83,6 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 .pn { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
 
 .about { margin-top: 30px; text-align: center; }
-.about h1 { font-size: 1.2rem; font-weight: 600; }
 .about p { color: var(--muted); }
 
 footer.foot { margin-top: auto; padding-top: 40px; font-size: .8rem; color: var(--muted); text-align: center; }
