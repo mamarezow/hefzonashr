@@ -1,0 +1,105 @@
+# Sveltia CMS settings for admin.hefzonashr.ir. Every save is a commit to `main`,
+# which rebuilds and publishes the site (.github/workflows/pages.yml).
+backend:
+  name: github
+  repo: mamarezow/hefzonashr
+  branch: main
+  base_url: https://admin.hefzonashr.ir
+
+site_url: https://hefzonashr.ir
+app_title: حفظ و نشر آثار
+
+# nothing uses images yet; the CMS just needs a place for them
+media_folder: src/media
+public_folder: /media
+
+# don't write `subtitle: ''` or `telegram: null` when those are left empty
+output:
+  omit_empty_optional_fields: true
+
+slug:
+  encoding: ascii
+  timezone: local
+
+collections:
+  - name: poems
+    label: شعر و ترانه
+    label_singular: شعر یا ترانه
+    description: سطرها دقیقا همان‌طور که نوشته شوند روی سایت می‌آیند.
+    folder: src/posts
+    filter: { field: form, value: poem }
+    # both collections write to src/posts and the CMS only checks for clashing names inside one
+    # collection, so their default names get different prefixes
+    slug: &slug
+      template: "poem-{{year}}{{month}}{{day}}"
+      editable: [create]
+      hint: نشانی نوشته، فقط حروف کوچک انگلیسی، عدد و خط تیره؛ مثلا zaman یا bakhtam. نام نوشته‌ای را که از قبل هست نگذار. بعدا عوض نمی‌شود.
+      pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$", فقط حروف کوچک انگلیسی، عدد و خط تیره.]
+    sortable_fields: &sort
+      fields: [date, title]
+      default: { field: date, direction: descending }
+    preview_path: posts/{{slug}}/
+    # anchored (&) fields are reused by the prose collection below
+    fields:
+      - &title { name: title, label: عنوان, widget: string }
+      - &subtitle { name: subtitle, label: زیرعنوان, widget: string, required: false, hint: اختیاری. اگر خالی بماند زیر عنوان چیزی نمی‌آید. }
+      - &date
+        name: date
+        label: تاریخ
+        widget: datetime
+        default: "{{now}}"
+        input_timezone: Asia/Tehran
+        hint: روی سایت فقط ماه و سال دیده می‌شود. ترتیب نوشته‌ها با همین تاریخ است.
+      - &telegram
+        name: telegram
+        label: شمارهٔ پست تلگرام
+        widget: number
+        value_type: int
+        min: 1
+        required: false
+        hint: اختیاری. عدد آخر لینک پست در کانال؛ لینک کوتاه hefzonashr.ir/p/عدد را می‌سازد.
+      - { name: form, widget: hidden, default: poem }
+      - name: tags
+        label: برچسب
+        widget: select
+        multiple: true
+        min: 1
+        default: [poem]
+        options: &tagOptions
+          - { label: جستار, value: essay }
+          - { label: یادداشت, value: note }
+          - { label: شعر, value: poem }
+          - { label: ترانه, value: song }
+          - { label: نقد, value: critique }
+          - { label: معرفی, value: intro }
+          - { label: دیگر, value: otherthings }
+      - name: body
+        label: متن
+        widget: text
+        hint: هر سطر همان‌جا می‌شکند که اینجا می‌شکند. بندها را با یک سطر خالی جدا کن.
+
+  - name: prose
+    label: جستار و یادداشت
+    label_singular: نوشته
+    description: متن نثر؛ روی سایت با کشیده و فاصله تراز می‌شود.
+    folder: src/posts
+    filter: { field: form, value: prose }
+    slug:
+      <<: *slug
+      template: "prose-{{year}}{{month}}{{day}}"
+    sortable_fields: *sort
+    preview_path: posts/{{slug}}/
+    fields:
+      - *title
+      - *subtitle
+      - *date
+      - *telegram
+      - { name: form, widget: hidden, default: prose }
+      - { name: tags, label: برچسب, widget: select, multiple: true, min: 1, default: [note], options: *tagOptions }
+      - name: body
+        label: متن
+        widget: markdown
+        modes: [rich_text, raw]
+        buttons: [bold, italic, link, quote, heading-three]
+        editor_components: []
+        hint: پاراگراف‌ها را با یک سطر خالی (Enter) جدا کن.
