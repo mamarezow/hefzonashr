@@ -6,7 +6,7 @@
 @font-face { font-family: "Sahel Latin"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/Sahel.woff2) format("woff2"); }
 
 :root {
-  --bg: #f4f4f1; --fg: #22252b; --muted: #6a6e77; --ink: #776b5c; --accent: #f4c430; --on-accent: #3a332b; --rule: #d6d6d0;
+  --bg: #e9e7e1; --fg: #22252b; --muted: #6a6e77; --ink: #776b5c; --accent: #f4c430; --on-accent: #3a332b; --rule: #d1cec6;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -72,6 +72,8 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 .body { margin-top: 22px; }
 .poem { white-space: pre-line; line-height: 2.25; }
 .prose p { text-align: justify; margin: 0 0 1em; }
+.prose .ln { display: block; white-space: nowrap; text-align: justify; text-align-last: justify; }
+.prose .ln.end { text-align: start; text-align-last: auto; }
 .postfoot { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 26px; padding-top: 14px; border-top: 1px dashed var(--rule); font-size: .82rem; color: var(--muted); }
 .postfoot .row { align-self: stretch; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .copy { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: .8rem; color: var(--fg); background: transparent; border: 1px solid var(--rule); border-radius: 9px; padding: 2px 6px 2px 12px; cursor: pointer; }
