@@ -33,7 +33,7 @@ collections:
     slug: &slug
       template: "poem-{{year}}{{month}}{{day}}"
       editable: [create]
-      hint: نشانی نوشته، فقط حروف کوچک انگلیسی، عدد و خط تیره؛ مثلا zaman یا bakhtam. نام نوشته‌ای را که از قبل هست نگذار. بعدا عوض نمی‌شود.
+      hint: نشانی نوشته، فقط حروف کوچک انگلیسی، عدد و خط تیره؛ ترجمهٔ انگلیسی عنوان، مثلا objectivity یا silent-drivers. نام نوشته‌ای را که از قبل هست نگذار. بعدا عوض نمی‌شود.
       pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$", فقط حروف کوچک انگلیسی، عدد و خط تیره.]
     sortable_fields: &sort
       fields: [date, title]

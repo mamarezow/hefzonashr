@@ -50,6 +50,9 @@ export default function (eleventyConfig) {
     .map(st => `<p>${st.split("\n").map(esc).join("<br>\n")}</p>`).join("\n"));
 
   // newest-first collection: «previous» is the older post, «next» the newer one
+  // the post living at a given url (used by the forwarding pages for old addresses)
+  eleventyConfig.addFilter("atUrl", (posts, url) => posts.find(p => p.url === url));
+
   eleventyConfig.addFilter("older", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i >= 0 ? posts[i + 1] : undefined; });
   eleventyConfig.addFilter("newer", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i > 0 ? posts[i - 1] : undefined; });
 
