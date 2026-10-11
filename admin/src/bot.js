@@ -1,6 +1,7 @@
 // The Telegram bot that writes posts: "new post" asks for a title, a section, tags and the text,
 // then commits src/posts/<address>.md to main (which rebuilds the site); "edit post" takes a
-// post's address and changes one part of it at a time. Only TELEGRAM_CHAT_ID can use it.
+// post's address and changes one part of it at a time; "delete post" removes one after asking.
+// Only TELEGRAM_CHAT_ID can use it.
 // Needs, besides the TELEGRAM_* settings of contact.js:
 //   GITHUB_TOKEN  a fine-grained GitHub token with Contents: read and write on the repository (as a secret)
 //   BOT           the KV namespace (wrangler.jsonc) that remembers where each conversation is
@@ -14,8 +15,8 @@ const SECTIONS = [
 ];
 // the same tags as src/_data/site.js
 const TAGS = { essay: "جستار", note: "یادداشت", poem: "شعر", song: "ترانه", critique: "نقد", intro: "معرفی", otherthings: "دیگر" };
-const NEW = "new post", EDIT = "edit post", DONE = "تمام", CANCEL = "لغو";
-const MENU = { keyboard: [[{ text: NEW }, { text: EDIT }]], resize_keyboard: true, is_persistent: true };
+const NEW = "new post", EDIT = "edit post", DELETE = "delete post", DONE = "تمام", CANCEL = "لغو";
+const MENU = { keyboard: [[{ text: NEW }, { text: EDIT }], [{ text: DELETE }]], resize_keyboard: true, is_persistent: true };
 const WRITING = { keyboard: [[{ text: DONE }, { text: CANCEL }]], resize_keyboard: true, is_persistent: true };
 const ASKING = { keyboard: [[{ text: CANCEL }]], resize_keyboard: true, is_persistent: true };
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -65,8 +66,8 @@ class Bot {
       await this.save({ mode: "new", step: "title", post: { tags: [] }, since: m.message_id });
       return this.say("عنوان نوشته چیست؟", ASKING);
     }
-    if (text === EDIT) {
-      await this.save({ mode: "edit", step: "url", since: m.message_id });
+    if (text === EDIT || text === DELETE) {
+      await this.save({ mode: text === EDIT ? "edit" : "delete", step: "url", since: m.message_id });
       return this.say("نشانی نوشته را بفرست.", ASKING);
     }
     const s = await this.load();
@@ -108,7 +109,7 @@ class Bot {
         if (!found) return this.say("نوشته‌ای با این نشانی پیدا نکردم. نشانی کامل را بفرست، مثلا hefzonashr.ir/posts/baqer");
         Object.assign(s, found, { step: "menu" }); await this.save(s);
         await this.say("پیدا شد.", MENU);
-        return this.menu(s);
+        return s.mode === "delete" ? this.confirmDelete(s) : this.menu(s);
       }
       default:
         return this.say("از دکمه‌های پیام بالا یکی را بزن، یا «لغو».");
@@ -162,9 +163,15 @@ class Bot {
       s.step = "slug"; await this.save(s);
       return this.say("نشانی انگلیسی را بفرست؛ فقط حروف کوچک، عدد و خط تیره، مثلا silent-drivers", ASKING);
     }
+    if (what === "delete" && s.step === "menu" && s.mode === "delete") {
+      await answer(); await close();
+      await deleteFile(this.env, `src/posts/${s.slug}.md`, `Delete post: ${p.title} (from Telegram)`, s.sha);
+      await this.forget();
+      return this.say(`«${p.title}» پاک شد؛ تا یکی دو دقیقهٔ دیگر از سایت هم برداشته می‌شود.`, MENU);
+    }
     if (what === "cancel") {
       await answer(); await close(); await this.forget();
-      return this.say(s.mode === "edit" ? "تمام شد." : "لغو شد.", MENU);
+      return this.say(s.mode === "edit" ? "تمام شد." : s.mode === "delete" ? "پاک نشد." : "لغو شد.", MENU);
     }
     if (what === "edit" && s.step === "menu") {
       await answer(); await close();
@@ -208,6 +215,13 @@ class Bot {
       [{ text: "دسته", callback_data: "edit:section" }, { text: "برچسب‌ها", callback_data: "edit:tags" }],
       [{ text: "متن", callback_data: "edit:body" }],
       [{ text: DONE, callback_data: "cancel" }]
+    ] });
+    s.since = r.result?.message_id; await this.save(s);
+  }
+
+  async confirmDelete(s) {
+    const r = await this.say(`«${s.post.title}» پاک شود؟ این کار برنمی‌گردد.\n${SITE}/posts/${s.slug}/`, { inline_keyboard: [
+      [{ text: "بله، پاک کن", callback_data: "delete" }, { text: "نه", callback_data: "cancel" }]
     ] });
     s.since = r.result?.message_id; await this.save(s);
   }
@@ -372,4 +386,9 @@ async function putFile(env, path, text, message, sha) {
   const r = await github(env, `contents/${path}`, { method: "PUT", body: JSON.stringify({ message, content: btoa(bin), branch: BRANCH, ...(sha && { sha }) }) });
   if (!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(() => ({}))).message || ""}`);
   return (await r.json()).content.sha;
+}
+
+async function deleteFile(env, path, message, sha) {
+  const r = await github(env, `contents/${path}`, { method: "DELETE", body: JSON.stringify({ message, sha, branch: BRANCH }) });
+  if (!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(() => ({}))).message || ""}`);
 }
