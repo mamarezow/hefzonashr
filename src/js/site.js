@@ -156,14 +156,16 @@ document.addEventListener("copy", e => {
 // past both ends. On a post, a swipe does what the arrow buttons under it do. Each
 // neighbouring page is fetched ahead of time and slides in beside this one, following
 // the finger 1:1, and the yellow marker glides between the pills with it; a quick flick is
-// enough. The address and history follow, so back,
-// forward and sharing work as if the page was opened by its link.
+// enough. Clicking a link inside the site swaps the page the same way, without a reload, on
+// every screen. The address and history follow, so back, forward and sharing work as if the
+// page was opened by its link.
 (() => {
   const nav = document.querySelector(".pills"), pills = nav ? [...nav.querySelectorAll("a")] : [];
   const ring = ["/", ...pills.map(a => a.getAttribute("href"))];
   const ringAt = path => /^\/(page\/\d+\/)?$/.test(path) ? 0 : ring.indexOf(path);
   const main = () => document.querySelector("main");
-  if (!main() || !matchMedia("(pointer: coarse)").matches) return;
+  if (!main()) return;
+  const touch = matchMedia("(pointer: coarse)").matches;
   const rtl = document.documentElement.dir === "rtl";
   // the page a swipe brings in: side 1 = finger moving right, so it comes from the left
   const toward = side => {
@@ -172,7 +174,6 @@ document.addEventListener("copy", e => {
     const a = main().querySelector(`.pn a[rel=${(side > 0) === rtl ? "next" : "prev"}]`);
     return a ? a.getAttribute("href") : null;
   };
-  if (ringAt(location.pathname) < 0 && !main().querySelector(".pn")) return;
   const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
   const SPRING = "cubic-bezier(.22,1,.36,1)";
 
@@ -190,7 +191,7 @@ document.addEventListener("copy", e => {
   const here = { html: main().innerHTML, title: document.title, pill: lit && lit.getAttribute("href") };
   ready.set(location.pathname, here); pages.set(location.pathname, Promise.resolve(here));
   const idle = window.requestIdleCallback || (f => setTimeout(f, 300));
-  const warm = () => idle(() => [1, -1].map(toward).forEach(u => u && load(u)));
+  const warm = () => touch && idle(() => [1, -1].map(toward).forEach(u => u && load(u)));
   warm();
 
   // the marker: a yellow block under the pills that glides from one to the next (home has none, so it fades)
@@ -228,12 +229,35 @@ document.addEventListener("copy", e => {
     load(url).then(pg => pg ? show(url, pg, false) : location.reload());
   });
 
+  // a click on a link inside the site: the page comes in place of this one (fetched while the
+  // pointer rested on the link), at the same spot a swipe would leave it
+  let busy = false;   // a swipe is finishing
+  const inside = e => {
+    const a = e.target.closest && e.target.closest("a[href]");
+    if (!a || a.target || a.hasAttribute("download") || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
+    const u = new URL(a.href, location.href);
+    if (u.origin !== location.origin || u.search || /\.[a-z0-9]+$/i.test(u.pathname) || (u.hash && u.pathname === location.pathname)) return null;
+    return u.pathname;
+  };
+  ["pointerover", "focusin", "touchstart"].forEach(t => addEventListener(t, e => { const u = inside(e); u && load(u); }, { passive: true }));
+  addEventListener("click", e => {
+    const url = inside(e);
+    if (!url || busy) return;
+    e.preventDefault();
+    load(url).then(pg => {
+      if (!pg) { location.href = url; return; }
+      if (url !== location.pathname) show(url, pg, true);
+      else show(url, pg, false);
+    });
+  });
+
   // the finger
+  if (!touch) return;
   const scrollsX = n => { for (; n && n !== document.body; n = n.parentElement) { const o = getComputedStyle(n).overflowX; if ((o === "auto" || o === "scroll") && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
   // how fast the finger was going at the end (px per ms), from its last moments only: a held finger is not a flick
   let samples = [];
   const flick = () => { const now = performance.now(), rec = samples.filter(q => now - q[0] < 120), a = rec[0], b = rec.at(-1); return a && b && b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0; };
-  let sx = null, sy = 0, lock = false, startTg = null, busy = false, m = null, target = null, side = 1, W = 0, p = 0;
+  let sx = null, sy = 0, lock = false, startTg = null, m = null, target = null, side = 1, W = 0, p = 0;
   const pose = q => {
     m.style.transform = `translate3d(${side * W * q}px,0,0)`;
     if (other) other.style.transform = `translate3d(${side * W * (q - 1)}px,0,0)`;
@@ -255,6 +279,7 @@ document.addEventListener("copy", e => {
       if (Math.hypot(mx, my) < 6) return;
       if (Math.abs(mx) <= Math.abs(my) * 1.2 || scrollsX(startTg) || String(getSelection())) { sx = null; return; }
       side = mx < 0 ? -1 : 1; target = toward(side);
+      if (!target) { sx = null; return; }   // a page outside the ring with no arrows: nothing to swipe to
       m = main(); W = innerWidth;
       const r = m.getBoundingClientRect(), top = Math.max(r.top, 0), page = target && ready.get(target);
       if (page) {

@@ -34,7 +34,9 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .switch svg { position: absolute; top: 6px; width: 14px; height: 14px; }
 .switch .sun { right: 7px; } .switch .moon { left: 7px; }
 .switch .knob { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); transition: right .2s ease; }
-.switch[aria-checked="true"] .knob { right: 27px; }
+/* the knob's side comes from the theme itself, so it is right from the first paint (no jump on load) */
+:root[data-theme="dark"] .switch .knob { right: 27px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .switch .knob { right: 27px; } }
 @media (prefers-reduced-motion: reduce) { .switch .knob { transition: none; } }
 
 .pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
