@@ -24,7 +24,7 @@ a { color: inherit; }
 h1, h2 { text-wrap: balance; margin: 0; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; }
 
-.wrap { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
+.wrap { overflow-x: clip; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
   padding-inline: max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-left)); padding-block: 14px 20px; }
 .col { width: 100%; max-width: 36rem; margin: 0 auto; flex: 1; display: flex; flex-direction: column; }
 
@@ -42,6 +42,12 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 @media (max-width: 480px) { .pills { gap: 5px; } .pills a { font-size: .78rem; padding: 0 8px; } }
 .pills a:hover { border-color: var(--accent); }
 .pills a.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+/* while swiping between sections on a phone, a marker glides under the pills instead */
+.pills { position: relative; }
+.pills a { position: relative; }
+.pills .mark { position: absolute; left: 0; top: 0; border-radius: 9px; background: var(--accent); opacity: 0; pointer-events: none; }
+.pills.moving a.on { background: transparent; border-color: var(--rule); color: var(--fg); }
+.pills.moving a.lit { color: var(--on-accent); }
 
 .tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag { text-decoration: none; font-size: .74rem; line-height: 1.8; padding: 0 8px; border-radius: 7px; border: 1px solid var(--rule); color: var(--ink); }
