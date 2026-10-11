@@ -160,7 +160,7 @@ document.addEventListener("copy", e => {
 });
 
 
-// ---- swipe sideways (finger, mouse or trackpad), between the sections and from one post to the next
+// ---- phones: swipe sideways, between the sections and from one post to the next
 // The sections form a ring: home (it has no button), then the pills in order; home sits
 // past both ends. On a post, a swipe does what the arrow buttons under it do. Each
 // neighbouring page is fetched ahead of time and slides in beside this one, following
@@ -174,6 +174,7 @@ document.addEventListener("copy", e => {
   const ringAt = path => /^\/(page\/\d+\/)?$/.test(path) ? 0 : ring.indexOf(path);
   const main = () => document.querySelector("main");
   if (!main()) return;
+  const touch = matchMedia("(pointer: coarse)").matches;
   const rtl = document.documentElement.dir === "rtl";
   // the page a swipe brings in: side 1 = finger moving right, so it comes from the left
   const toward = side => {
@@ -199,7 +200,7 @@ document.addEventListener("copy", e => {
   const here = { html: main().innerHTML, title: document.title, pill: lit && lit.getAttribute("href") };
   ready.set(location.pathname, here); pages.set(location.pathname, Promise.resolve(here));
   const idle = window.requestIdleCallback || (f => setTimeout(f, 300));
-  const warm = () => idle(() => [1, -1].map(toward).forEach(u => u && load(u)));
+  const warm = () => touch && idle(() => [1, -1].map(toward).forEach(u => u && load(u)));
   warm();
 
   // the marker: a yellow block under the pills that glides from one to the next (home has none, so it fades)
@@ -259,28 +260,35 @@ document.addEventListener("copy", e => {
     });
   });
 
-  // the gesture: a finger on a phone, the mouse dragged sideways, or two fingers on a trackpad,
-  // all moving the page the same way
+  // the finger
+  if (!touch) return;
   const scrollsX = n => { for (; n && n !== document.body; n = n.parentElement) { const o = getComputedStyle(n).overflowX; if ((o === "auto" || o === "scroll") && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
-  // how fast it was going at the end (px per ms), from its last moments only: a held finger is not a flick
+  // how fast the finger was going at the end (px per ms), from its last moments only: a held finger is not a flick
   let samples = [];
   const flick = () => { const now = performance.now(), rec = samples.filter(q => now - q[0] < 120), a = rec[0], b = rec.at(-1); return a && b && b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0; };
-  let sx = null, sy = 0, lock = false, startTg = null, m = null, target = null, side = 1, W = 0, p = 0, gain = 1;
+  let sx = null, sy = 0, lock = false, startTg = null, m = null, target = null, side = 1, W = 0, p = 0;
   const pose = q => {
     m.style.transform = `translate3d(${side * W * q}px,0,0)`;
     if (other) other.style.transform = `translate3d(${side * W * (q - 1)}px,0,0)`;
     markAt(curPill, toPill, Math.max(0, Math.min(1, q)));
   };
-  // gain: a mouse or trackpad moves the page further than it moves itself, since a desktop screen is wide
-  const begin = (x, y, tg, g = 1) => { gain = g; startTg = tg; sx = x; sy = y; lock = false; samples = []; };
-  // false: not (or no longer) a sideways swipe
-  function move(x, y) {
-    const mx = x - sx, my = y - sy;
+  const MV = { passive: false };   // only on while a finger that may swipe is down, so ordinary scrolling never waits for it
+  addEventListener("touchstart", e => {
+    sx = null; if (busy || e.touches.length > 1) return;
+    const t = e.touches[0];
+    // the screen edges belong to the browser's own back swipe; a zoomed-in page pans instead
+    if (t.clientX < 20 || t.clientX > innerWidth - 20 || (window.visualViewport && visualViewport.scale > 1.01)) return;
+    startTg = e.target; sx = t.clientX; sy = t.clientY; lock = false; samples = [];
+    addEventListener("touchmove", mv, MV);
+  }, { passive: true });
+  function mv(e) {
+    if (sx == null || (!lock && e.touches.length > 1)) { sx = null; removeEventListener("touchmove", mv, MV); return; }
+    const x = e.touches[0].clientX, mx = x - sx, my = e.touches[0].clientY - sy;
     if (!lock) {
-      if (Math.hypot(mx, my) < 6) return true;
-      if (Math.abs(mx) <= Math.abs(my) * 1.2 || scrollsX(startTg) || String(getSelection())) { sx = null; return false; }
+      if (Math.hypot(mx, my) < 6) return;
+      if (Math.abs(mx) <= Math.abs(my) * 1.2 || scrollsX(startTg) || String(getSelection())) { sx = null; return; }
       side = mx < 0 ? -1 : 1; target = toward(side);
-      if (!target) { sx = null; return false; }   // a page outside the ring with no arrows: nothing to swipe to
+      if (!target) { sx = null; return; }   // a page outside the ring with no arrows: nothing to swipe to
       m = main(); W = innerWidth;
       const r = m.getBoundingClientRect(), top = Math.max(r.top, 0), page = target && ready.get(target);
       if (page) {
@@ -292,17 +300,18 @@ document.addEventListener("copy", e => {
       toPill = page ? page.pill : pillOf(target) ? target : null;
       m.style.willChange = "transform"; m.style.transition = "none";
       nav && nav.classList.add("moving"); mark.style.transition = "none";
-      sx = x - (mx > 0 ? 6 : -6);   // start from where it is now: no jump
+      sx = x - (mx > 0 ? 6 : -6);   // start from where the finger is now: no jump
       lock = true;
     }
-    let dx = (x - sx) * gain; if (dx * side < 0) dx /= 4;   // pulled back past the start: barely moves
+    if (e.cancelable) e.preventDefault();
+    let dx = x - sx; if (dx * side < 0) dx /= 4;   // pulled back past the start: barely moves
     p = dx * side / W; if (!other) p /= 3;         // nothing that way (or not loaded yet): give a little
-    samples.push([performance.now(), x * gain]); if (samples.length > 6) samples.shift();
+    samples.push([performance.now(), x]); if (samples.length > 6) samples.shift();
     pose(p);
-    return true;
   }
   function end() {
-    if (sx == null) return false; sx = null; if (!lock) return false; lock = false;
+    removeEventListener("touchmove", mv, MV);
+    if (sx == null) return; sx = null; if (!lock) return; lock = false;
     const v = flick() * side, q = Math.max(0, p) * (other ? 1 : 3);
     const commit = !!target && (q > 0.3 || (v > 0.3 && q > 0.04)) && v > -0.2;
     const left = commit ? 1 - q : q;
@@ -318,62 +327,6 @@ document.addEventListener("copy", e => {
       else if (commit) load(target).then(pg => pg ? show(target, pg, true) : (location.href = target));
       else { if (other) { other.remove(); other = null; } m.style.cssText = ""; unmark(); }
     }, ms + 20);
-    return true;
   }
-
-  // a finger
-  const MV = { passive: false };   // only on while a finger that may swipe is down, so ordinary scrolling never waits for it
-  addEventListener("touchstart", e => {
-    sx = null; if (busy || e.touches.length > 1) return;
-    const t = e.touches[0];
-    // the screen edges belong to the browser's own back swipe; a zoomed-in page pans instead
-    if (t.clientX < 20 || t.clientX > innerWidth - 20 || (window.visualViewport && visualViewport.scale > 1.01)) return;
-    begin(t.clientX, t.clientY, e.target);
-    addEventListener("touchmove", tmove, MV);
-  }, { passive: true });
-  function tmove(e) {
-    if (sx == null || (!lock && e.touches.length > 1)) { sx = null; removeEventListener("touchmove", tmove, MV); return; }
-    if (!move(e.touches[0].clientX, e.touches[0].clientY)) return;
-    if (lock && e.cancelable) e.preventDefault();
-  }
-  const tend = () => { removeEventListener("touchmove", tmove, MV); end(); };
-  addEventListener("touchend", tend); addEventListener("touchcancel", tend);
-
-  // the mouse: press anywhere that isn't a control and drag sideways; a drag is not also a click
-  let dragged = false;
-  addEventListener("pointerdown", e => {
-    if (e.pointerType === "touch" || e.button || busy || sx != null) return;
-    if (e.target.closest("a, button, input, textarea, select, label, [data-tgl]")) return;
-    begin(e.clientX, e.clientY, e.target, Math.max(1, innerWidth / 480)); dragged = false;   // about 150px is enough
-    addEventListener("pointermove", pmove); addEventListener("pointerup", pend); addEventListener("pointercancel", pend);
-  });
-  function pmove(e) {
-    if (sx == null) return pend();
-    if (move(e.clientX, e.clientY) && lock) { dragged = true; document.documentElement.classList.add("dragging"); }
-  }
-  function pend() {
-    removeEventListener("pointermove", pmove); removeEventListener("pointerup", pend); removeEventListener("pointercancel", pend);
-    document.documentElement.classList.remove("dragging");
-    end();
-  }
-  addEventListener("click", e => { if (dragged) { dragged = false; e.preventDefault(); e.stopPropagation(); } }, true);
-  addEventListener("dragstart", e => { if (sx != null) e.preventDefault(); });
-
-  // two fingers on a trackpad: sideways scrolling moves the page as a finger would; it lets go
-  // when the scrolling stops (the trackpad's own coasting included), and the coasting after
-  // a swipe is not taken for a new one
-  let wx = 0, wy = 0, wquiet = 0, wtimer = 0, wdone = 0;
-  addEventListener("wheel", e => {
-    if (e.ctrlKey || e.deltaMode) return;            // pinch zoom, or a mouse wheel's lines
-    const now = performance.now();
-    if (sx == null) {
-      if (busy || now - wdone < 350 || Math.abs(e.deltaX) <= Math.abs(e.deltaY) || scrollsX(e.target)) { if (busy || now - wdone < 350) wdone = now; return; }
-      wx = innerWidth / 2; wy = innerHeight / 2; begin(wx, wy, e.target, Math.max(1, innerWidth / 360));
-    }
-    wx -= e.deltaX; wy -= e.deltaY;
-    if (!move(wx, wy)) { wdone = now; return; }
-    if (lock && e.cancelable) e.preventDefault();   // and not the browser's back/forward swipe
-    clearTimeout(wtimer);
-    wtimer = setTimeout(() => { wdone = performance.now(); end(); }, 140);
-  }, { passive: false });
+  addEventListener("touchend", end); addEventListener("touchcancel", end);
 })();
