@@ -7,9 +7,9 @@ pagination:
 permalink: "{% if pagination.pageNumber > 0 %}/page/{{ pagination.pageNumber + 1 }}/{% else %}/{% endif %}"
 ---
 {% include "postlist.njk" %}
-{%- if pagination.href.next or pagination.href.previous %}
+{#- one button: the next (older) ten come in under these; without JavaScript it opens /page/2/ … -#}
+{%- if pagination.href.next %}
 <div class="more">
-  {%- if pagination.href.previous %}<a class="ibtn" href="{{ pagination.href.previous }}" aria-label="نوشته‌های تازه‌تر" title="نوشته‌های تازه‌تر">{{ icons.up | safe }}</a>{% endif %}
-  {%- if pagination.href.next %}<a class="ibtn" href="{{ pagination.href.next }}" aria-label="نوشته‌های قدیمی‌تر" title="نوشته‌های قدیمی‌تر">{{ icons.down | safe }}</a>{% endif %}
+  <a class="ibtn" href="{{ pagination.href.next }}" data-more aria-label="نوشته‌های بیشتر" title="نوشته‌های بیشتر">{{ icons.down | safe }}</a>
 </div>
 {%- endif %}

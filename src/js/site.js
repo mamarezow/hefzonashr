@@ -260,6 +260,23 @@ document.addEventListener("copy", e => {
     });
   });
 
+  // "more" under the home list: the next ten come in below the ones already here, and the button
+  // moves down with them (gone after the last); the page remembers them for back/forward
+  addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest("a[data-more]");
+    if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (a.classList.contains("off")) return;
+    a.classList.add("off");
+    fetch(a.getAttribute("href")).then(r => r.ok ? r.text() : Promise.reject()).then(t => {
+      const d = new DOMParser().parseFromString(t, "text/html"), list = main().querySelector(".list"), more = a.closest(".more");
+      list.append(...d.querySelectorAll(".list > li"));
+      const next = d.querySelector(".more");
+      next ? more.replaceWith(next) : more.remove();
+      const v = ready.get(location.pathname); if (v) v.html = main().innerHTML;
+    }).catch(() => { location.href = a.href; });
+  }, true);
+
   // the finger
   if (!touch) return;
   const scrollsX = n => { for (; n && n !== document.body; n = n.parentElement) { const o = getComputedStyle(n).overflowX; if ((o === "auto" || o === "scroll") && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
