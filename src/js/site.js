@@ -33,8 +33,8 @@ document.addEventListener("submit", e => {
   if (!f) return;
   e.preventDefault();
   const note = f.querySelector(".note"), btn = f.querySelector("button"), from = f.elements.email.value.trim();
-  // an email, or a Telegram username with or without @ (the server checks the same)
-  if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(from) && !/^@?[A-Za-z][A-Za-z0-9_]{4,31}$/.test(from)) {
+  // optional: an email, or a Telegram username with or without @ (the server checks the same)
+  if (from && !/^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(from) && !/^@?[A-Za-z][A-Za-z0-9_]{4,31}$/.test(from)) {
     note.textContent = "ایمیل یا شناسهٔ تلگرام درست نیست."; f.elements.email.focus(); return;
   }
   btn.disabled = true; note.textContent = "در حال فرستادن…";

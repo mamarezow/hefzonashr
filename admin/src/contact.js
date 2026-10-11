@@ -1,5 +1,5 @@
-// The message form on hefzonashr.ir/me/ posts here with a message and the sender's email or
-// Telegram username; it goes to Mamareza's Telegram through a bot. Set in the Cloudflare dashboard (Worker > Settings > Variables and Secrets):
+// The message form on hefzonashr.ir/me/ posts here with a message and, if they like, the sender's
+// email or Telegram username; it goes to Mamareza's Telegram through a bot. Set in the Cloudflare dashboard (Worker > Settings > Variables and Secrets):
 //   TELEGRAM_BOT_TOKEN  the bot's token from @BotFather (as a secret)
 //   TELEGRAM_CHAT_ID    the numeric id of the account that should receive the messages
 // The page sends JSON with fetch; without JavaScript the plain form post works too and
@@ -21,8 +21,8 @@ export async function onRequest({ request, env }) {
   try { data = json ? await request.json() : Object.fromEntries(await request.formData()); } catch { return answer(false, 400); }
   const message = String(data.message || "").trim(), from = String(data.email || "").trim();
   if (data.website) return answer(true, 200);                       // the hidden field only bots fill in
-  if (!message || message.length > 4000 || !(EMAIL.test(from) || TELEGRAM.test(from))) return answer(false, 400);
-  const sender = EMAIL.test(from) ? from : "@" + from.replace(/^@/, "");
+  if (!message || message.length > 4000 || (from && !EMAIL.test(from) && !TELEGRAM.test(from))) return answer(false, 400);
+  const sender = !from ? "بی‌نام" : EMAIL.test(from) ? from : "@" + from.replace(/^@/, "");
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return answer(false, 503);
 
   const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
