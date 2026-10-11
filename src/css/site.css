@@ -127,6 +127,9 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 .comment .row { align-items: stretch; }
 .comment .row button { flex: none; padding: 0 14px; border-radius: 9px; font-size: .8rem; }
 .comment .note:empty { display: none; }
+/* the page is swiped sideways with the mouse or trackpad too: no browser back/forward swipe in its place */
+html, body { overscroll-behavior-x: none; }
+.dragging, .dragging * { cursor: grabbing !important; }
 /* no text on the site can be selected (Mamareza's choice); only the form fields take text */
 body { -webkit-user-select: none; user-select: none; cursor: default; }
 textarea, input { -webkit-user-select: text; user-select: text; cursor: text; }
