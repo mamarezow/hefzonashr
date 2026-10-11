@@ -27,6 +27,7 @@ const copyButtons = root => root.querySelectorAll("[data-copy]").forEach(b => b.
 }));
 copyButtons(document);
 
+document.addEventListener("focusin", e => { const f = e.target.closest && e.target.closest("[data-contact]"); if (f && !f.dataset.began) f.dataset.began = Date.now(); });
 // ---- the message form on /me/ (listened for on the document, so it also works after a swipe brings the page in)
 document.addEventListener("submit", e => {
   const f = e.target.closest("[data-contact]");
@@ -38,10 +39,12 @@ document.addEventListener("submit", e => {
     note.textContent = "ایمیل یا شناسهٔ تلگرام درست نیست."; f.elements.email.focus(); return;
   }
   btn.disabled = true; note.textContent = "در حال فرستادن…";
-  fetch(f.action, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(f))) })
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(d => { if (!d.ok) throw 0; f.reset(); note.textContent = "رسید؛ ممنون!"; })
-    .catch(() => { note.textContent = "نرسید؛ دوباره امتحان کن."; })
+  // how long since the form was first touched: the server takes a near-instant post for a bot
+  const ms = Date.now() - (+f.dataset.began || Date.now());
+  fetch(f.action, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...Object.fromEntries(new FormData(f)), ms }) })
+    .then(r => r.status === 429 ? Promise.reject(429) : r.ok ? r.json() : Promise.reject())
+    .then(d => { if (!d.ok) throw 0; f.reset(); delete f.dataset.began; note.textContent = "رسید؛ ممنون!"; })
+    .catch(e => { note.textContent = e === 429 ? "پیام‌ها زیاد شده؛ کمی بعد دوباره امتحان کن." : "نرسید؛ دوباره امتحان کن."; })
     .finally(() => { btn.disabled = false; });
 });
 { // back from the form's plain post, when JavaScript was off

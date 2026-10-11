@@ -3,6 +3,10 @@
 // Telegram through a bot. A comment also names its post (`post`: the short link, `page`: its address). Set in the Cloudflare dashboard (Worker > Settings > Variables and Secrets):
 //   TELEGRAM_BOT_TOKEN  the bot's token from @BotFather (as a secret)
 //   TELEGRAM_CHAT_ID    the numeric id of the account that should receive the messages
+// Against spam, besides the hidden field only bots fill in: the page says how long the form was
+// being filled in (`ms`; a script that posts straight away gets a quiet "ok" and nothing is sent),
+// one address may send 5 messages in 10 minutes, the same text is sent once a day, and the whole
+// site at most 100 a day (counted in the BOT KV namespace, bot.js).
 // The page sends JSON with fetch; without JavaScript the plain form post works too and
 // comes back to the page with ?sent=1 or ?sent=0.
 const SITE = "https://hefzonashr.ir";
@@ -26,14 +30,29 @@ export async function onRequest({ request, env }) {
   const post = POST.test(data.post || "") ? data.post : "", page = PAGE.test(data.page || "") ? data.page : "";
   if (page) back = ok => `${SITE}${page}?sent=${ok ? 1 : 0}#comment`;
   if (data.website) return answer(true, 200);                       // the hidden field only bots fill in
+  if (json && !(Number(data.ms) >= 2000)) return answer(true, 200);  // filled in faster than a person can
   if (!message || message.length > 4000 || (from && !EMAIL.test(from) && !TELEGRAM.test(from))) return answer(false, 400);
   const sender = !from ? "anonymous" : EMAIL.test(from) ? from : "@" + from.replace(/^@/, "");
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return answer(false, 503);
+  let seenKey = "";
+  if (env.BOT) {
+    const ip = request.headers.get("CF-Connecting-IP") || "?", day = new Date().toISOString().slice(0, 10);
+    const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(message)))].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
+    const [mine, all, seen] = await Promise.all([`rl:ip:${ip}`, `rl:day:${day}`, `rl:text:${hash}`].map(k => env.BOT.get(k)));
+    if (seen) return answer(true, 200);                                // the same text again: already sent
+    if (+mine >= 5 || +all >= 100) return answer(false, 429);
+    await Promise.all([
+      env.BOT.put(`rl:ip:${ip}`, String(+mine + 1), { expirationTtl: 600 }),
+      env.BOT.put(`rl:day:${day}`, String(+all + 1), { expirationTtl: 172800 })
+    ]);
+    seenKey = `rl:text:${hash}`;
+  }
 
   const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: `${post ? "comment for " + post : "message from hefzonashr.ir"}\n${sender}\n\n${message}`, link_preview_options: { is_disabled: true } })
   });
+  if (r.ok && seenKey) await env.BOT.put(seenKey, "1", { expirationTtl: 86400 });
   return answer(r.ok, r.ok ? 200 : 502);
 }
