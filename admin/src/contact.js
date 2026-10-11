@@ -22,13 +22,13 @@ export async function onRequest({ request, env }) {
   const message = String(data.message || "").trim(), from = String(data.email || "").trim();
   if (data.website) return answer(true, 200);                       // the hidden field only bots fill in
   if (!message || message.length > 4000 || (from && !EMAIL.test(from) && !TELEGRAM.test(from))) return answer(false, 400);
-  const sender = !from ? "بی‌نام" : EMAIL.test(from) ? from : "@" + from.replace(/^@/, "");
+  const sender = !from ? "anonymous" : EMAIL.test(from) ? from : "@" + from.replace(/^@/, "");
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return answer(false, 503);
 
   const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: `پیام از سایت\nاز: ${sender}\n\n${message}`, link_preview_options: { is_disabled: true } })
+    body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: `message from hefzonashr.ir\n${sender}\n\n${message}`, link_preview_options: { is_disabled: true } })
   });
   return answer(r.ok, r.ok ? 200 : 502);
 }
