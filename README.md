@@ -4,7 +4,7 @@ Source of [hefzonashr.ir](https://hefzonashr.ir): a static site built with [Elev
 
 ## Writing a post
 
-One Markdown file per post in `src/posts/`. The file name becomes the address (`src/posts/objectivity.md` → `/posts/objectivity/`); name files after the English translation of the title. When a file is renamed, add its old address to `src/_data/redirects.js` so old links keep working.
+One Markdown file per post in `src/posts/`. The file name becomes the address (`src/posts/objectivity.md` → `/note/objectivity/`, under the post's section; the old `/posts/objectivity/` forwards there); name files after the English translation of the title. When a file is renamed, add its old address to `src/_data/redirects.js` so old links keep working.
 
 ```yaml
 ---

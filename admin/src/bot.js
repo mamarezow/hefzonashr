@@ -106,7 +106,7 @@ class Bot {
       }
       case "url": {
         const found = await this.find(text);
-        if (!found) return this.say("نوشته‌ای با این نشانی پیدا نکردم. نشانی کامل را بفرست، مثلا hefzonashr.ir/posts/baqer");
+        if (!found) return this.say("نوشته‌ای با این نشانی پیدا نکردم. نشانی کامل را بفرست، مثلا hefzonashr.ir/poeticwords/baqer");
         Object.assign(s, found, { step: "menu" }); await this.save(s);
         await this.say("پیدا شد.", MENU);
         return s.mode === "delete" ? this.confirmDelete(s) : this.menu(s);
@@ -158,7 +158,7 @@ class Bot {
       await putFile(this.env, path, render(p), `New post: ${p.title} (from Telegram)`);
       await this.env.BOT.put("short", String(p.telegram));
       await this.forget();
-      return this.say(`منتشر شد. تا یکی دو دقیقهٔ دیگر اینجاست:\n${SITE}/posts/${s.slug}/\nلینک کوتاه: ${SITE.replace("https://", "")}/p/${p.telegram}`, MENU);
+      return this.say(`منتشر شد. تا یکی دو دقیقهٔ دیگر اینجاست:\n${postUrl(s.slug, p.tags)}\nلینک کوتاه: ${SITE.replace("https://", "")}/p/${p.telegram}`, MENU);
     }
     if (what === "slug" && s.step === "review") {
       await answer(); await close();
@@ -206,13 +206,13 @@ class Bot {
       "دسته: " + sectionOf(p.tags).label,
       "برچسب‌ها: " + tagNames(p.tags),
       "متن: " + words.toLocaleString("fa-IR") + " کلمه",
-      "نشانی: " + `${SITE}/posts/${s.slug}/`
+      "نشانی: " + postUrl(s.slug, p.tags)
     ].join("\n"), { inline_keyboard: [[{ text: "انتشار", callback_data: "publish" }], [{ text: "تغییر نشانی", callback_data: "slug" }, { text: CANCEL, callback_data: "cancel" }]] });
     s.since = r.result?.message_id; await this.save(s);
   }
 
   async menu(s) {
-    const r = await this.say(`کدام بخش «${s.post.title}» را عوض کنیم؟\n${SITE}/posts/${s.slug}/`, { inline_keyboard: [
+    const r = await this.say(`کدام بخش «${s.post.title}» را عوض کنیم؟\n${postUrl(s.slug, s.post.tags)}`, { inline_keyboard: [
       [{ text: "عنوان", callback_data: "edit:title" }, { text: "زیرعنوان", callback_data: "edit:subtitle" }],
       [{ text: "دسته", callback_data: "edit:section" }, { text: "برچسب‌ها", callback_data: "edit:tags" }],
       [{ text: "متن", callback_data: "edit:body" }],
@@ -222,7 +222,7 @@ class Bot {
   }
 
   async confirmDelete(s) {
-    const r = await this.say(`«${s.post.title}» پاک شود؟ این کار برنمی‌گردد.\n${SITE}/posts/${s.slug}/`, { inline_keyboard: [
+    const r = await this.say(`«${s.post.title}» پاک شود؟ این کار برنمی‌گردد.\n${postUrl(s.slug, s.post.tags)}`, { inline_keyboard: [
       [{ text: "بله، پاک کن", callback_data: "delete" }, { text: "نه", callback_data: "cancel" }]
     ] });
     s.since = r.result?.message_id; await this.save(s);
@@ -237,12 +237,12 @@ class Bot {
     return this.menu(s);
   }
 
-  // a post from any of its addresses: /posts/<slug>/, a short link /p/<id>/, or an old address
+  // a post from any of its addresses: /<section>/<slug>/, the old /posts/<slug>/, a short link /p/<id>/, or an old address
   async find(input) {
     let u;
     try { u = new URL(/^https?:\/\//i.test(input.trim()) ? input.trim() : "https://" + input.trim()); } catch { return null; }
     if (u.hostname.replace(/^www\./, "") !== "hefzonashr.ir") return null;
-    const slugOf = path => decodeURIComponent(path).match(/^\/posts\/([a-z0-9-]+)\/?$/)?.[1];
+    const slugOf = path => decodeURIComponent(path).match(/^\/(?:posts|essay|note|poeticwords|otherthings)\/([a-z0-9-]+)\/?$/)?.[1];
     let slug = slugOf(u.pathname), file = slug && await getFile(this.env, `src/posts/${slug}.md`);
     if (!file) {
       // short links and old addresses are small pages that name the post as canonical
@@ -364,6 +364,8 @@ const paragraphs = text => text.split(/\n[ \t]*\n/).flatMap(block => {
 }).join("\n\n");
 const oneLine = text => text.replace(/\s+/g, " ").trim();
 const sectionOf = tags => SECTIONS.find(x => x.tags.some(t => tags.includes(t))) || SECTIONS[3];
+// a post's address on the site, under its section (src/posts/posts.11tydata.js)
+const postUrl = (slug, tags) => `${SITE}/${sectionOf(tags).key}/${slug}/`;
 const tagNames = tags => tags.map(t => TAGS[t] || t).join("، ");
 const rows = (items, n) => items.reduce((r, x, i) => (i % n ? r[r.length - 1].push(x) : r.push([x]), r), []);
 const sectionKeys = () => ({ inline_keyboard: rows(SECTIONS.map(x => ({ text: x.label, callback_data: "section:" + x.key })), 2) });

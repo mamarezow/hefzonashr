@@ -1,4 +1,4 @@
-// old post addresses (before titles were translated, 2026-10-10) -> new ones; each gets a small forwarding page
+// old Finglish post addresses (before titles were translated, 2026-10-10) -> the post they became (by its file name); each gets a small forwarding page (see the "moved" collection)
 export default {
   "/posts/aftab-ghamzade/": "/posts/late-summer/",
   "/posts/bagher/": "/posts/baqer/",

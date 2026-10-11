@@ -1,14 +1,14 @@
 ---
 pagination:
-  data: redirects
+  data: collections.moved
   size: 1
-  alias: old
-permalink: "{{ old }}"
+  alias: moved
+permalink: "{{ moved.from }}"
 eleventyExcludeFromCollections: true
 ---
-{#- a post's old address (Finglish name, before 2026-10-10): same forwarding page as the short links, so shared links,
-    search results and Instant View keep working -#}
-{%- set post = collections.posts | atUrl(redirects[old]) -%}
+{#- a post's old address (/posts/<name>/, or its Finglish name from before 2026-10-10): same forwarding page as the
+    short links, so shared links, search results and Instant View keep working -#}
+{%- set post = moved.post -%}
 {%- set target = site.url + post.url -%}
 <!doctype html>
 <html lang="fa" dir="rtl">

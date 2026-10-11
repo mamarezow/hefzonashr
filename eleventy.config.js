@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import redirects from "./src/_data/redirects.js";
 
 const TZ = "Asia/Tehran";
 // dates are shown as month and year only («اردیبهشت ۱۳۹۹»), never the day
@@ -20,6 +21,16 @@ export default function (eleventyConfig) {
   // posts that came from the Telegram channel get a short link /p/<message id>/
   eleventyConfig.addCollection("shortlinked", api =>
     api.getFilteredByGlob("src/posts/*.md").filter(p => p.data.telegram));
+
+  // addresses that forward to a post: /posts/<name>/ (every post lived there until 2026-10-11) and the
+  // Finglish names from before 2026-10-10 (src/_data/redirects.js)
+  eleventyConfig.addCollection("moved", api => {
+    const posts = api.getFilteredByGlob("src/posts/*.md"), bySlug = s => posts.find(p => p.page.fileSlug === s);
+    return [
+      ...posts.map(post => ({ from: `/posts/${post.page.fileSlug}/`, post })),
+      ...Object.entries(redirects).map(([from, to]) => ({ from, post: bySlug(to.split("/")[2]) })).filter(m => m.post)
+    ];
+  });
 
   eleventyConfig.addFilter("jdate", d => {
     const parts = Object.fromEntries(faDate.formatToParts(d).map(p => [p.type, p.value]));

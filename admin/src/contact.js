@@ -12,7 +12,7 @@
 const SITE = "https://hefzonashr.ir";
 const cors = { "Access-Control-Allow-Origin": SITE, "Access-Control-Allow-Methods": "POST", "Access-Control-Allow-Headers": "Content-Type" };
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
-const POST = /^hefzonashr\.ir\/(p\/\d+|posts\/[a-z0-9-]+\/?)$/, PAGE = /^\/posts\/[a-z0-9-]+\/$/;
+const POST = /^hefzonashr\.ir\/(p\/\d+|[a-z]+\/[a-z0-9-]+\/?)$/, PAGE = /^\/[a-z]+\/[a-z0-9-]+\/$/;
 const TELEGRAM = /^@?[A-Za-z][A-Za-z0-9_]{4,31}$/;   // a Telegram username, with or without @
 
 export async function onRequest({ request, env }) {
