@@ -7,7 +7,6 @@
 const SITE = "https://hefzonashr.ir";
 const cors = { "Access-Control-Allow-Origin": SITE, "Access-Control-Allow-Methods": "POST", "Access-Control-Allow-Headers": "Content-Type" };
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
-const WHEN = new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const TELEGRAM = /^@?[A-Za-z][A-Za-z0-9_]{4,31}$/;   // a Telegram username, with or without @
 
 export async function onRequest({ request, env }) {
@@ -29,7 +28,7 @@ export async function onRequest({ request, env }) {
   const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: `message from hefzonashr.ir\n${sender}\n${WHEN.format(new Date())}\n\n\n${message}`, link_preview_options: { is_disabled: true } })
+    body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: `message from hefzonashr.ir\n${sender}\n\n${message}`, link_preview_options: { is_disabled: true } })
   });
   return answer(r.ok, r.ok ? 200 : 502);
 }
