@@ -96,6 +96,17 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 .about .social { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
 .about .social .ibtn { width: 30px; height: 30px; border-radius: 9px; }
 .about .social svg { width: 17px; height: 17px; }
+.contact { margin-top: 26px; padding-top: 20px; border-top: 1px dashed var(--rule); display: flex; flex-direction: column; gap: 8px; text-align: start; }
+.contact textarea, .contact input { font: inherit; font-size: .9rem; color: var(--fg); background: transparent; border: 1px solid var(--rule); border-radius: 9px; padding: 7px 11px; width: 100%; resize: none; }
+.contact input[dir="ltr"]::placeholder { direction: rtl; text-align: right; }
+.contact textarea:focus, .contact input:focus { outline: none; border-color: var(--accent); }
+.contact ::placeholder { color: var(--muted); opacity: .8; }
+.contact { position: relative; }
+.contact .hp { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); }
+.contact .row { display: flex; align-items: center; gap: 10px; }
+.contact button { font: inherit; font-size: .74rem; background: transparent; cursor: pointer; }
+.contact button:disabled { opacity: .5; cursor: default; }
+.contact .note { font-size: .8rem; color: var(--muted); }
 .about .tagrows { margin-top: 26px; padding-top: 18px; border-top: 1px dashed var(--rule); display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .about .tagrows div { display: flex; justify-content: center; gap: 8px; }
 
