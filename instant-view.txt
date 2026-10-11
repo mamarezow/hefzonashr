@@ -1,9 +1,11 @@
 # Telegram Instant View template for hefzonashr.ir
 # Lives in the editor at https://instantview.telegram.org (this copy is only for reference).
-# Post pages (/posts/<slug>/) and short links (/p/<telegram id>/) carry the same <article>.
+# Post pages (/<section>/<address>/ since 2026-10-11), their old addresses (/posts/<slug>/) and short links
+# (/p/<telegram id>/) carry the same <article>.
 
 ~version: "2.1"
 
+?path: /(essay|note|poeticwords|otherthings)/[a-z0-9-]+/?
 ?path: /posts/.+
 ?path: /p/[0-9]+/?
 
