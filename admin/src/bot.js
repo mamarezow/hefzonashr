@@ -1,11 +1,12 @@
 // The Telegram bot that writes posts: "new post" asks for a title, a section, tags and the text,
 // then commits src/posts/<address>.md to main (which rebuilds the site); "edit post" takes a
 // post's address and changes one part of it at a time; "delete post" removes one after asking.
-// Only TELEGRAM_CHAT_ID can use it.
+// Only TELEGRAM_CHAT_ID can use it; anyone else only gets a panel account (accounts.js).
 // Needs, besides the TELEGRAM_* settings of contact.js:
 //   GITHUB_TOKEN  a fine-grained GitHub token with Contents: read and write on the repository (as a secret)
 //   BOT           the KV namespace (wrangler.jsonc) that remembers where each conversation is
 // Opening https://admin.hefzonashr.ir/telegram/setup once points Telegram at /telegram.
+import { ACCOUNT, accountMessage, accountPress } from "./accounts.js";
 const REPO = "mamarezow/hefzonashr", BRANCH = "main", SITE = "https://hefzonashr.ir";
 const SECTIONS = [
   { key: "essay", label: "جستار", form: "prose", tags: ["essay"] },
@@ -16,7 +17,7 @@ const SECTIONS = [
 // the same tags as src/_data/site.js
 const TAGS = { essay: "جستار", note: "یادداشت", poem: "شعر", song: "ترانه", critique: "نقد", intro: "معرفی", otherthings: "دیگر" };
 const NEW = "new post", EDIT = "edit post", DELETE = "delete post", DONE = "تمام", CANCEL = "لغو";
-const MENU = { keyboard: [[{ text: NEW }, { text: EDIT }], [{ text: DELETE }]], resize_keyboard: true, is_persistent: true };
+const MENU = { keyboard: [[{ text: NEW }, { text: EDIT }], [{ text: DELETE }, { text: ACCOUNT }]], resize_keyboard: true, is_persistent: true };
 const WRITING = { keyboard: [[{ text: DONE }, { text: CANCEL }]], resize_keyboard: true, is_persistent: true };
 const ASKING = { keyboard: [[{ text: CANCEL }]], resize_keyboard: true, is_persistent: true };
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -40,10 +41,16 @@ export async function onRequest({ request, env }) {
   if (request.method !== "POST" || request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== await secret(env)) return new Response("Not Found", { status: 404 });
   const update = await request.json().catch(() => ({}));
   const chat = update.message?.chat?.id ?? update.callback_query?.message?.chat?.id;
-  if (String(chat) !== String(env.TELEGRAM_CHAT_ID)) return new Response("ok");   // not Mamareza: stay silent
+  const owner = String(chat) === String(env.TELEGRAM_CHAT_ID);
+  if (!owner) {                               // anyone else can only make a panel account (accounts.js)
+    if (update.message?.chat?.type === "private") await accountMessage(env, update.message, false).catch(() => {});
+    return new Response("ok");
+  }
   const bot = new Bot(env, chat);
   try {
-    if (update.callback_query) await bot.press(update.callback_query);
+    if (update.callback_query?.data?.startsWith("acct-")) await accountPress(env, update.callback_query);
+    else if (update.callback_query) await bot.press(update.callback_query);
+    else if (update.message && await accountMessage(env, update.message, true, MENU)) { /* the panel account */ }
     else if (update.message) await bot.message(update.message);
   } catch (e) {
     await bot.say("خطا: " + (e.message || e), MENU);
@@ -462,7 +469,7 @@ const tehranNow = () => new Date(Date.now() + 3.5 * 3600e3).toISOString().slice(
 
 // ---- Telegram and GitHub ----
 
-async function tg(env, method, body) {
+export async function tg(env, method, body) {
   const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/${method}`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
   });

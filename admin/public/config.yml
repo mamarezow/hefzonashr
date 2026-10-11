@@ -5,6 +5,9 @@ backend:
   repo: mamarezow/hefzonashr
   branch: main
   base_url: https://admin.hefzonashr.ir
+  # GitHub through the Worker, so username/password sign-ins (src/accounts.js) work too
+  api_root: https://admin.hefzonashr.ir/gh/api/v3
+  graphql_api_root: https://admin.hefzonashr.ir/gh/api/graphql
 
 site_url: https://hefzonashr.ir
 app_title: حفظ و نشر آثار

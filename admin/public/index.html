@@ -10,9 +10,17 @@
 @font-face { font-family: "Sahel"; src: url("/fonts/Sahel-Bold-FD.woff2") format("woff2"); font-weight: 600 700; font-display: swap; }
 /* the site's font and its yellow, inside Sveltia's own theme */
 html:root:root { --sui-font-family-default: "Sahel", system-ui, sans-serif; --sui-base-hue: 45; }
+#hz-login { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; font: 15px "Sahel", system-ui, sans-serif; padding: 8px 18px; border-radius: 10px; background: #f4c430; color: #222; text-decoration: none; }
 </style>
 </head>
 <body>
+<a id="hz-login" href="/login" hidden>ورود با نام کاربری و رمز</a>
+<script>
+// the username/password sign-in (src/accounts.js), shown while nobody is signed in
+const hzLogin = document.getElementById("hz-login");
+const hzCheck = () => { hzLogin.hidden = !!localStorage.getItem("sveltia-cms.user"); };
+hzCheck(); setInterval(hzCheck, 1000);
+</script>
 <script src="https://unpkg.com/@sveltia/cms@0.233.1/dist/sveltia-cms.js"></script>
 </body>
 </html>
