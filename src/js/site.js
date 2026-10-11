@@ -265,13 +265,14 @@ document.addEventListener("copy", e => {
   // how fast it was going at the end (px per ms), from its last moments only: a held finger is not a flick
   let samples = [];
   const flick = () => { const now = performance.now(), rec = samples.filter(q => now - q[0] < 120), a = rec[0], b = rec.at(-1); return a && b && b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0; };
-  let sx = null, sy = 0, lock = false, startTg = null, m = null, target = null, side = 1, W = 0, p = 0;
+  let sx = null, sy = 0, lock = false, startTg = null, m = null, target = null, side = 1, W = 0, p = 0, gain = 1;
   const pose = q => {
     m.style.transform = `translate3d(${side * W * q}px,0,0)`;
     if (other) other.style.transform = `translate3d(${side * W * (q - 1)}px,0,0)`;
     markAt(curPill, toPill, Math.max(0, Math.min(1, q)));
   };
-  const begin = (x, y, tg) => { startTg = tg; sx = x; sy = y; lock = false; samples = []; };
+  // gain: a mouse or trackpad moves the page further than it moves itself, since a desktop screen is wide
+  const begin = (x, y, tg, g = 1) => { gain = g; startTg = tg; sx = x; sy = y; lock = false; samples = []; };
   // false: not (or no longer) a sideways swipe
   function move(x, y) {
     const mx = x - sx, my = y - sy;
@@ -294,9 +295,9 @@ document.addEventListener("copy", e => {
       sx = x - (mx > 0 ? 6 : -6);   // start from where it is now: no jump
       lock = true;
     }
-    let dx = x - sx; if (dx * side < 0) dx /= 4;   // pulled back past the start: barely moves
+    let dx = (x - sx) * gain; if (dx * side < 0) dx /= 4;   // pulled back past the start: barely moves
     p = dx * side / W; if (!other) p /= 3;         // nothing that way (or not loaded yet): give a little
-    samples.push([performance.now(), x]); if (samples.length > 6) samples.shift();
+    samples.push([performance.now(), x * gain]); if (samples.length > 6) samples.shift();
     pose(p);
     return true;
   }
@@ -343,7 +344,7 @@ document.addEventListener("copy", e => {
   addEventListener("pointerdown", e => {
     if (e.pointerType === "touch" || e.button || busy || sx != null) return;
     if (e.target.closest("a, button, input, textarea, select, label, [data-tgl]")) return;
-    begin(e.clientX, e.clientY, e.target); dragged = false;
+    begin(e.clientX, e.clientY, e.target, Math.max(1, innerWidth / 480)); dragged = false;   // about 150px is enough
     addEventListener("pointermove", pmove); addEventListener("pointerup", pend); addEventListener("pointercancel", pend);
   });
   function pmove(e) {
@@ -367,7 +368,7 @@ document.addEventListener("copy", e => {
     const now = performance.now();
     if (sx == null) {
       if (busy || now - wdone < 350 || Math.abs(e.deltaX) <= Math.abs(e.deltaY) || scrollsX(e.target)) { if (busy || now - wdone < 350) wdone = now; return; }
-      wx = innerWidth / 2; wy = innerHeight / 2; begin(wx, wy, e.target);
+      wx = innerWidth / 2; wy = innerHeight / 2; begin(wx, wy, e.target, Math.max(1, innerWidth / 360));
     }
     wx -= e.deltaX; wy -= e.deltaY;
     if (!move(wx, wy)) { wdone = now; return; }
