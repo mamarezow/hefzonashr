@@ -104,6 +104,12 @@ class Bot {
         s.slug = slug; s.step = "review"; await this.save(s);
         return this.review(s);
       }
+      case "date": {
+        const d = newDate(p.date, text);
+        if (!d) return this.say("نفهمیدم؛ ماه و سال را بفرست، مثلا «اردیبهشت ۱۳۹۹» یا «۱۵ آذر ۱۴۰۲».");
+        p.date = d;
+        return this.store(s, "تاریخ");
+      }
       case "address": {
         const name = text.trim().toLowerCase();
         if (!SLUG.test(name)) return this.say("فقط حروف کوچک انگلیسی، عدد و خط تیره؛ مثلا silent-drivers");
@@ -189,6 +195,10 @@ class Bot {
         s.step = "subtitle"; await this.save(s);
         return this.say("زیرعنوان تازه را بفرست." + (p.subtitle ? "\nالان: " + p.subtitle : ""), { inline_keyboard: [[{ text: "بدون زیرعنوان", callback_data: "nosub" }]] });
       }
+      if (arg === "date") {
+        s.step = "date"; await this.save(s);
+        return this.say(`تاریخ تازه را بفرست، مثلا «اردیبهشت ۱۳۹۹». روی سایت هم فقط ماه و سال دیده می‌شود.\nالان: ${faMonthYear(p.date)}`, ASKING);
+      }
       if (arg === "address") {
         s.step = "address"; await this.save(s);
         return this.say(`نشانی تازه را بفرست؛ فقط حروف کوچک انگلیسی، عدد و خط تیره. می‌آید زیر دسته‌اش، مثلا hefzonashr.ir/${sectionOf(p.tags).key}/silent-drivers\nنشانی قبلی هم به نشانی تازه می‌رود.\nالان: ${p.address || s.slug}`, ASKING);
@@ -226,7 +236,8 @@ class Bot {
     const r = await this.say(`کدام بخش «${s.post.title}» را عوض کنیم؟\n${postUrl(s)}`, { inline_keyboard: [
       [{ text: "عنوان", callback_data: "edit:title" }, { text: "زیرعنوان", callback_data: "edit:subtitle" }],
       [{ text: "دسته", callback_data: "edit:section" }, { text: "برچسب‌ها", callback_data: "edit:tags" }],
-      [{ text: "متن", callback_data: "edit:body" }, { text: "نشانی", callback_data: "edit:address" }],
+      [{ text: "متن", callback_data: "edit:body" }, { text: "تاریخ", callback_data: "edit:date" }],
+      [{ text: "نشانی", callback_data: "edit:address" }],
       [{ text: DONE, callback_data: "cancel" }]
     ] });
     s.since = r.result?.message_id; await this.save(s);
@@ -413,6 +424,40 @@ function chunks(text, max = 4000) {
 }
 
 // Iran has no daylight saving time since 2022
+// ---- dates: posts keep a full time (+03:30); Mamareza gives the Persian month and year, a day if he likes
+const MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+const latin = t => t.replace(/[۰-۹]/g, c => "۰۱۲۳۴۵۶۷۸۹".indexOf(c)).replace(/[٠-٩]/g, c => "٠١٢٣٤٥٦٧٨٩".indexOf(c));
+const jalaliOf = date => {   // [year, month 1-12, day] in Tehran
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", { year: "numeric", month: "numeric", day: "numeric", timeZone: "Asia/Tehran" }).formatToParts(new Date(date)).map(x => [x.type, x.value]));
+  return [parseInt(parts.year, 10), +parts.month, +parts.day];
+};
+const faMonthYear = date => { const [y, m] = jalaliOf(date); return `${MONTHS[m - 1]} ${y.toLocaleString("fa-IR", { useGrouping: false })}`; };
+// the Gregorian day of a Jalali date: step from a nearby guess until the calendars agree
+const gregorianOf = (jy, jm, jd) => {
+  let t = Date.UTC(jy + 621, 2, 21) + ((jm - 1) * 30.4 + jd - 1) * 864e5;
+  for (let i = 0; i < 60; i++) {
+    const [y, m, d] = jalaliOf(t + 12 * 3600e3), diff = (jy - y) * 366 + (jm - m) * 31 + (jd - d);
+    if (!diff) return new Date(t).toISOString().slice(0, 10);
+    t += Math.sign(diff) * Math.max(1, Math.abs(diff) > 40 ? Math.round(Math.abs(diff) * 0.9) : 1) * 864e5;
+  }
+  return null;
+};
+// "اردیبهشت ۱۳۹۹" or "۱۵ آذر ۱۴۰۲": a Persian month name, a 4-digit year, maybe a day (else the old one); the time of day stays
+function newDate(old, text) {
+  const t = latin(text).replace(/ي/g, "ی").replace(/\s+/g, " ").trim();
+  const month = MONTHS.findIndex(name => t.includes(name)) + 1;
+  const year = +(t.match(/\b(1[2-4]\d\d)\b/) || [])[1];
+  if (!month || !year) return null;
+  const rest = t.replace(MONTHS[month - 1], " ").replace(String(year), " ").match(/\b(\d{1,2})\b/);
+  const [, , oldDay] = jalaliOf(old), max = month <= 6 ? 31 : 30;
+  let day = rest ? +rest[1] : oldDay;
+  if (day < 1 || day > max) return null;
+  let g = gregorianOf(year, month, day);
+  if (!g && day === 30 && month === 12) g = gregorianOf(year, 12, day = 29);   // not a leap year
+  if (!g) return null;
+  const time = (old.match(/T(\d\d:\d\d:\d\d)/) || [, "12:00:00"])[1];
+  return `${g}T${time}+03:30`;
+}
 const tehranNow = () => new Date(Date.now() + 3.5 * 3600e3).toISOString().slice(0, 19) + "+03:30";
 
 // ---- Telegram and GitHub ----
