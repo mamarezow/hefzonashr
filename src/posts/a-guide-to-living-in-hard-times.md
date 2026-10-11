@@ -3,6 +3,7 @@ title: "شوپنهاور"
 subtitle: "راهنمای زیستن در شرایط دشوار"
 date: 2026-04-25T03:09:25+03:30
 telegram: 212
+address: the-guide-to-living-in-hard-times
 form: poem
 tags: [poem]
 ---
