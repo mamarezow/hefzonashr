@@ -45,7 +45,7 @@ document.addEventListener("submit", e => {
     .finally(() => { btn.disabled = false; });
 });
 { // back from the form's plain post, when JavaScript was off
-  const sent = new URLSearchParams(location.search).get("sent"), note = document.querySelector("[data-contact] .note");
+  const sent = new URLSearchParams(location.search).get("sent"), note = document.querySelector("[data-contact] .note");   // the message form on /me/ or a post's comment box
   if (sent && note) note.textContent = sent === "1" ? "رسید؛ ممنون!" : "نرسید؛ دوباره امتحان کن.";
 }
 
