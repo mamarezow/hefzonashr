@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import redirects from "./src/_data/redirects.js";
 
 const TZ = "Asia/Tehran";
@@ -22,14 +23,19 @@ export default function (eleventyConfig) {
   eleventyConfig.addCollection("shortlinked", api =>
     api.getFilteredByGlob("src/posts/*.md").filter(p => p.data.telegram));
 
-  // addresses that forward to a post: /posts/<name>/ (every post lived there until 2026-10-11) and the
-  // Finglish names from before 2026-10-10 (src/_data/redirects.js)
+  // addresses that forward to a post. A post's names: its `address`, its file name, and every `address`
+  // it had before (read from git history); each name forwards from /posts/<name>/ (where every post lived
+  // until 2026-10-11) and from every section, so a renamed or re-sectioned post keeps its old links.
+  // Plus the Finglish names from before 2026-10-10 (src/_data/redirects.js).
   eleventyConfig.addCollection("moved", api => {
     const posts = api.getFilteredByGlob("src/posts/*.md"), bySlug = s => posts.find(p => p.page.fileSlug === s);
-    return [
-      ...posts.map(post => ({ from: `/posts/${post.page.fileSlug}/`, post })),
-      ...Object.entries(redirects).map(([from, to]) => ({ from, post: bySlug(to.split("/")[2]) })).filter(m => m.post)
-    ];
+    const past = pastAddresses(), roots = ["posts", "essay", "note", "poeticwords", "otherthings"];
+    const owner = new Map(posts.map(p => [p.url, null]));       // real post pages are never overwritten
+    const add = (from, post) => { if (!owner.has(from)) owner.set(from, post); };
+    for (const names of [p => [p.data.address], p => [p.page.fileSlug], p => past[p.page.fileSlug] || []])
+      for (const post of posts) for (const name of names(post)) if (name) for (const root of roots) add(`/${root}/${name}/`, post);
+    for (const [from, to] of Object.entries(redirects)) { const post = bySlug(to.split("/")[2]); if (post) add(from, post); }
+    return [...owner].filter(([, post]) => post).map(([from, post]) => ({ from, post }));
   });
 
   eleventyConfig.addFilter("jdate", d => {
@@ -73,4 +79,20 @@ export default function (eleventyConfig) {
     markdownTemplateEngine: false,
     htmlTemplateEngine: "njk"
   };
+}
+
+// every `address:` a post file has ever had, by file name, from git history (empty without git)
+function pastAddresses() {
+  const out = {};
+  let log = "";
+  try { log = execSync("git log --format= -p --no-renames -- src/posts", { encoding: "utf8", maxBuffer: 1 << 28, stdio: ["ignore", "pipe", "ignore"] }); } catch { return out; }
+  let file = "";
+  for (const line of log.split("\n")) {
+    const f = line.match(/^diff --git a\/src\/posts\/([^/]+)\.md /);
+    if (f) { file = f[1]; continue; }
+    const a = line.match(/^[-+]address:\s*["']?([a-z0-9-]+)["']?\s*$/);
+    if (a && file) (out[file] ||= new Set()).add(a[1]);
+  }
+  for (const k in out) out[k] = [...out[k]];
+  return out;
 }

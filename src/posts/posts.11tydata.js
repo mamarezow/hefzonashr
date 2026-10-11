@@ -3,8 +3,9 @@ const section = data => (data.site.pills.find(p => p.tags.some(t => (data.tags |
 
 export default {
   layout: "post.njk",
-  // under the post's section (/essay/<name>/, /poeticwords/<name>/ …); the old /posts/<name>/ forwards here
-  permalink: data => `${section(data)}${data.page.fileSlug}/`,
+  // under the post's section (/essay/<name>/, /poeticwords/<name>/ …); <name> is the front matter's
+  // `address` if it has one, else the file name. Every older address forwards here (the "moved" collection).
+  permalink: data => `${section(data)}${data.address || data.page.fileSlug}/`,
   eleventyComputed: {
     // light up the header button of the post's section, if it has one
     pill: section

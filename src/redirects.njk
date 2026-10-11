@@ -16,6 +16,7 @@ eleventyExcludeFromCollections: true
 <meta charset="utf-8">
 <title>{{ post.data.title }} | {{ site.title }}</title>
 <link rel="canonical" href="{{ target }}">
+<meta name="hefzonashr:file" content="{{ post.page.fileSlug }}">
 <meta property="og:site_name" content="{{ site.title }}">
 <meta property="og:title" content="{{ post.data.title }}">
 <meta property="og:description" content="{{ post.data.subtitle or '' }}">

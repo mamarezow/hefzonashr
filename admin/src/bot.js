@@ -100,9 +100,16 @@ class Bot {
       case "slug": {
         const slug = text.trim().toLowerCase();
         if (!SLUG.test(slug)) return this.say("فقط حروف کوچک انگلیسی، عدد و خط تیره؛ مثلا silent-drivers");
-        if (await getFile(this.env, `src/posts/${slug}.md`)) return this.say("این نشانی مال نوشتهٔ دیگری است؛ یکی دیگر بفرست.");
+        if (await this.taken(slug)) return this.say("این نشانی مال نوشتهٔ دیگری است؛ یکی دیگر بفرست.");
         s.slug = slug; s.step = "review"; await this.save(s);
         return this.review(s);
+      }
+      case "address": {
+        const name = text.trim().toLowerCase();
+        if (!SLUG.test(name)) return this.say("فقط حروف کوچک انگلیسی، عدد و خط تیره؛ مثلا silent-drivers");
+        if (name !== s.slug && await this.taken(name, s.slug)) return this.say("این نشانی مال نوشتهٔ دیگری است؛ یکی دیگر بفرست.");
+        if (name === s.slug) delete p.address; else p.address = name;
+        return this.store(s, "نشانی");
       }
       case "url": {
         const found = await this.find(text);
@@ -152,13 +159,13 @@ class Bot {
     if (what === "publish" && s.step === "review") {
       await answer(); await close();
       const path = `src/posts/${s.slug}.md`;
-      if (await getFile(this.env, path)) { s.step = "slug"; await this.save(s); return this.say("این نشانی همین حالا گرفته شد؛ نشانی دیگری بفرست.", ASKING); }
+      if (await this.taken(s.slug)) { s.step = "slug"; await this.save(s); return this.say("این نشانی همین حالا گرفته شد؛ نشانی دیگری بفرست.", ASKING); }
       p.date = tehranNow();
       p.telegram = await this.nextShort();
       await putFile(this.env, path, render(p), `New post: ${p.title} (from Telegram)`);
       await this.env.BOT.put("short", String(p.telegram));
       await this.forget();
-      return this.say(`منتشر شد. تا یکی دو دقیقهٔ دیگر اینجاست:\n${postUrl(s.slug, p.tags)}\nلینک کوتاه: ${SITE.replace("https://", "")}/p/${p.telegram}`, MENU);
+      return this.say(`منتشر شد. تا یکی دو دقیقهٔ دیگر اینجاست:\n${postUrl(s)}\nلینک کوتاه: ${SITE.replace("https://", "")}/p/${p.telegram}`, MENU);
     }
     if (what === "slug" && s.step === "review") {
       await answer(); await close();
@@ -181,6 +188,10 @@ class Bot {
       if (arg === "subtitle") {
         s.step = "subtitle"; await this.save(s);
         return this.say("زیرعنوان تازه را بفرست." + (p.subtitle ? "\nالان: " + p.subtitle : ""), { inline_keyboard: [[{ text: "بدون زیرعنوان", callback_data: "nosub" }]] });
+      }
+      if (arg === "address") {
+        s.step = "address"; await this.save(s);
+        return this.say(`نشانی تازه را بفرست؛ فقط حروف کوچک انگلیسی، عدد و خط تیره. می‌آید زیر دسته‌اش، مثلا hefzonashr.ir/${sectionOf(p.tags).key}/silent-drivers\nنشانی قبلی هم به نشانی تازه می‌رود.\nالان: ${p.address || s.slug}`, ASKING);
       }
       if (arg === "section") { s.step = "section"; await this.save(s); return this.say("دستهٔ تازه؟", sectionKeys()); }
       if (arg === "tags") { s.step = "tags"; await this.save(s); return this.say("برچسب‌ها را عوض کن، بعد «ادامه».", tagKeys(p.tags)); }
@@ -206,23 +217,23 @@ class Bot {
       "دسته: " + sectionOf(p.tags).label,
       "برچسب‌ها: " + tagNames(p.tags),
       "متن: " + words.toLocaleString("fa-IR") + " کلمه",
-      "نشانی: " + postUrl(s.slug, p.tags)
+      "نشانی: " + postUrl(s)
     ].join("\n"), { inline_keyboard: [[{ text: "انتشار", callback_data: "publish" }], [{ text: "تغییر نشانی", callback_data: "slug" }, { text: CANCEL, callback_data: "cancel" }]] });
     s.since = r.result?.message_id; await this.save(s);
   }
 
   async menu(s) {
-    const r = await this.say(`کدام بخش «${s.post.title}» را عوض کنیم؟\n${postUrl(s.slug, s.post.tags)}`, { inline_keyboard: [
+    const r = await this.say(`کدام بخش «${s.post.title}» را عوض کنیم؟\n${postUrl(s)}`, { inline_keyboard: [
       [{ text: "عنوان", callback_data: "edit:title" }, { text: "زیرعنوان", callback_data: "edit:subtitle" }],
       [{ text: "دسته", callback_data: "edit:section" }, { text: "برچسب‌ها", callback_data: "edit:tags" }],
-      [{ text: "متن", callback_data: "edit:body" }],
+      [{ text: "متن", callback_data: "edit:body" }, { text: "نشانی", callback_data: "edit:address" }],
       [{ text: DONE, callback_data: "cancel" }]
     ] });
     s.since = r.result?.message_id; await this.save(s);
   }
 
   async confirmDelete(s) {
-    const r = await this.say(`«${s.post.title}» پاک شود؟ این کار برنمی‌گردد.\n${postUrl(s.slug, s.post.tags)}`, { inline_keyboard: [
+    const r = await this.say(`«${s.post.title}» پاک شود؟ این کار برنمی‌گردد.\n${postUrl(s)}`, { inline_keyboard: [
       [{ text: "بله، پاک کن", callback_data: "delete" }, { text: "نه", callback_data: "cancel" }]
     ] });
     s.since = r.result?.message_id; await this.save(s);
@@ -245,13 +256,24 @@ class Bot {
     const slugOf = path => decodeURIComponent(path).match(/^\/(?:posts|essay|note|poeticwords|otherthings)\/([a-z0-9-]+)\/?$/)?.[1];
     let slug = slugOf(u.pathname), file = slug && await getFile(this.env, `src/posts/${slug}.md`);
     if (!file) {
-      // short links and old addresses are small pages that name the post as canonical
-      const r = await fetch(SITE + u.pathname.replace(/\/?$/, "/"));
-      const href = r.ok && (await r.text()).match(/<link rel="canonical" href="([^"]+)"/)?.[1];
-      slug = href && slugOf(new URL(href, SITE).pathname);
+      // any other address (a chosen one, a short link, an old one): the site's page names the post's file
+      slug = await this.fileAt(u.pathname);
       file = slug && await getFile(this.env, `src/posts/${slug}.md`);
     }
     return file ? { slug, sha: file.sha, post: parse(file.text) } : null;
+  }
+
+  // the post file behind an address on the site (its page carries <meta name="hefzonashr:file">)
+  async fileAt(path) {
+    const r = await fetch(SITE + path.replace(/\/?$/, "/"), { cf: { cacheTtl: 0 } }).catch(() => null);
+    return r?.ok ? (await r.text()).match(/<meta name="hefzonashr:file" content="([a-z0-9-]+)">/)?.[1] : undefined;
+  }
+
+  // is this name already some other post's: its file, or an address (now or before) the site forwards
+  async taken(name, own) {
+    if (name !== own && await getFile(this.env, `src/posts/${name}.md`)) return true;
+    const file = await this.fileAt(`/posts/${name}/`);
+    return !!file && file !== own;
   }
 
   // the next short link /p/<n>: one past the highest the site has (/p/last.txt) or this bot gave out
@@ -290,6 +312,7 @@ export function parse(text) {
     const [, key, value] = kv;
     if (key === "title" || key === "subtitle") post[key] = scalar(value);
     else if (key === "date" || key === "telegram" || key === "form") post[key] = value.trim();
+    else if (key === "address") post.address = scalar(value);
     else if (key === "tags") {
       if (value.trim()) post.tags = value.replace(/^\[|\]$/g, "").split(",").map(t => t.trim()).filter(Boolean);
       else list = true;
@@ -303,6 +326,7 @@ export function render(p) {
   if (p.subtitle) head.push("subtitle: " + JSON.stringify(p.subtitle));
   head.push("date: " + p.date);
   if (p.telegram) head.push("telegram: " + p.telegram);
+  if (p.address) head.push("address: " + p.address);
   head.push("form: " + p.form, "tags: [" + p.tags.join(", ") + "]", ...(p.rest || []), "---");
   // poems start right under the front matter, like the others in src/posts
   return head.join("\n") + (p.form === "poem" ? "\n" : "\n\n") + p.body.replace(/\s+$/, "") + "\n";
@@ -365,7 +389,8 @@ const paragraphs = text => text.split(/\n[ \t]*\n/).flatMap(block => {
 const oneLine = text => text.replace(/\s+/g, " ").trim();
 const sectionOf = tags => SECTIONS.find(x => x.tags.some(t => tags.includes(t))) || SECTIONS[3];
 // a post's address on the site, under its section (src/posts/posts.11tydata.js)
-const postUrl = (slug, tags) => `${SITE}/${sectionOf(tags).key}/${slug}/`;
+// (its `address` if it has one, else the file name)
+const postUrl = s => `${SITE}/${sectionOf(s.post.tags).key}/${s.post.address || s.slug}/`;
 const tagNames = tags => tags.map(t => TAGS[t] || t).join("، ");
 const rows = (items, n) => items.reduce((r, x, i) => (i % n ? r[r.length - 1].push(x) : r.push([x]), r), []);
 const sectionKeys = () => ({ inline_keyboard: rows(SECTIONS.map(x => ({ text: x.label, callback_data: "section:" + x.key })), 2) });

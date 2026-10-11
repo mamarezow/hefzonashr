@@ -33,7 +33,7 @@ collections:
     slug: &slug
       template: "poem-{{year}}{{month}}{{day}}"
       editable: [create]
-      hint: نشانی نوشته، فقط حروف کوچک انگلیسی، عدد و خط تیره؛ ترجمهٔ انگلیسی عنوان، مثلا objectivity یا silent-drivers. نام نوشته‌ای را که از قبل هست نگذار. بعدا عوض نمی‌شود.
+      hint: نشانی نوشته، فقط حروف کوچک انگلیسی، عدد و خط تیره؛ ترجمهٔ انگلیسی عنوان، مثلا objectivity یا silent-drivers. نام نوشته‌ای را که از قبل هست نگذار. خود این نام بعدا عوض نمی‌شود، ولی نشانی روی سایت را با «نشانی دلخواه» می‌شود عوض کرد.
       pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$", فقط حروف کوچک انگلیسی، عدد و خط تیره.]
     sortable_fields: &sort
       fields: [date, title]
@@ -58,6 +58,13 @@ collections:
         min: 1
         required: false
         hint: اختیاری. عدد آخر لینک پست در کانال؛ لینک کوتاه hefzonashr.ir/p/عدد را می‌سازد.
+      - &address
+        name: address
+        label: نشانی دلخواه
+        widget: string
+        required: false
+        hint: اختیاری. نشانی نوشته زیر دسته‌اش، مثلا silent-drivers برای hefzonashr.ir/note/silent-drivers. فقط حروف کوچک انگلیسی، عدد و خط تیره، و نه نشانی نوشتهٔ دیگری. اگر خالی بماند همان نام فایل است. نشانی‌های قبلی همیشه به نشانی تازه می‌روند.
+        pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$", فقط حروف کوچک انگلیسی، عدد و خط تیره.]
       - { name: form, widget: hidden, default: poem }
       - name: tags
         label: برچسب
@@ -94,6 +101,7 @@ collections:
       - *subtitle
       - *date
       - *telegram
+      - *address
       - { name: form, widget: hidden, default: prose }
       - { name: tags, label: برچسب, widget: select, multiple: true, min: 1, default: [note], options: *tagOptions }
       - name: body

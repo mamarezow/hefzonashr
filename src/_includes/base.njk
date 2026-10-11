@@ -10,6 +10,9 @@
 {%- if desc %}
 <meta name="description" content="{{ desc }}">{% endif %}
 <link rel="canonical" href="{{ site.url }}{{ page.url }}">
+{%- if "/src/posts/" in page.inputPath %}
+<meta name="hefzonashr:file" content="{{ page.fileSlug }}">{# the post's file, for the Telegram bot #}
+{%- endif %}
 <meta property="og:site_name" content="{{ site.title }}">
 <meta property="og:title" content="{{ title or site.title }}">
 <meta property="og:description" content="{{ desc }}">
