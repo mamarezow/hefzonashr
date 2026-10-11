@@ -100,8 +100,9 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 
 .about { margin-top: 30px; text-align: center; }
 .about p { color: var(--muted); }
-.about .social { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
-.about .social .ibtn { width: 30px; height: 30px; border-radius: 9px; }
+.about .social { display: flex; gap: 8px; margin-inline-start: auto; }
+.about .social .ibtn { width: 34px; height: 34px; border-radius: 9px; }
+.about .contact button { height: 34px; padding: 0 14px; border-radius: 9px; font-size: .8rem; }
 .about .social svg { width: 17px; height: 17px; }
 .contact { margin-top: 26px; padding-top: 20px; border-top: 1px dashed var(--rule); display: flex; flex-direction: column; gap: 8px; text-align: start; }
 .contact textarea, .contact input { font: inherit; font-size: .9rem; color: var(--fg); background: transparent; border: 1px solid var(--rule); border-radius: 9px; padding: 7px 11px; width: 100%; resize: none; }
