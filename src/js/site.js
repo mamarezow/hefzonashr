@@ -314,7 +314,8 @@ document.addEventListener("copy", e => {
     setTimeout(() => {
       busy = false;
       if (commit && other) show(target, ready.get(target), true);
-      else if (commit) location.href = target;
+      // not fetched yet (a fast swipe): wait for it here instead of reloading the whole page
+      else if (commit) load(target).then(pg => pg ? show(target, pg, true) : (location.href = target));
       else { if (other) { other.remove(); other = null; } m.style.cssText = ""; unmark(); }
     }, ms + 20);
   }
