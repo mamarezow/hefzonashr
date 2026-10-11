@@ -8,4 +8,4 @@
     {#- the social links sit across from the button, the same height -#}
     <span class="social">{% for s in site.social %}<a class="ibtn" href="{{ s.url }}" target="_blank" rel="me noopener" aria-label="{{ s.name }}" title="{{ s.name }}">{{ icons[s.icon] | safe }}</a>{% endfor %}</span></div>
 </form>
-<nav class="tagrows" aria-label="برچسب‌ها">{% for row in site.tags | tagRows(collections.posts) %}<div>{% for k in row %}<a class="tag" href="/{{ k }}/">{{ site.tags[k] }}</a>{% endfor %}</div>{% endfor %}</nav></div>{% endblock %}
+<nav class="tagrows" aria-label="برچسب‌ها">{% for k in site.tags | usedTags(collections.posts) %}<a class="tag" href="/{{ k }}/">{{ site.tags[k] }}</a>{% endfor %}</nav></div>{% endblock %}
