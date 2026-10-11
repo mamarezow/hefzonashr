@@ -52,6 +52,13 @@ export default function (eleventyConfig) {
   // newest-first collection: «previous» is the older post, «next» the newer one
   // the post living at a given url (used by the forwarding pages for old addresses)
   eleventyConfig.addFilter("atUrl", (posts, url) => posts.find(p => p.url === url));
+  // tags that have posts, as rows of at most 4, as even as possible (7 -> 4 + 3)
+  eleventyConfig.addFilter("tagRows", (tags, posts) => {
+    const keys = Object.keys(tags).filter(k => posts.some(p => (p.data.tags || []).includes(k)));
+    const n = Math.ceil(keys.length / 4), rows = [];
+    for (let i = 0, at = 0; i < n; i++) { const size = Math.ceil((keys.length - at) / (n - i)); rows.push(keys.slice(at, at + size)); at += size; }
+    return rows;
+  });
 
   eleventyConfig.addFilter("older", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i >= 0 ? posts[i + 1] : undefined; });
   eleventyConfig.addFilter("newer", (posts, url) => { const i = posts.findIndex(p => p.url === url); return i > 0 ? posts[i - 1] : undefined; });
