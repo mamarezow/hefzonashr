@@ -27,6 +27,24 @@ const copyButtons = root => root.querySelectorAll("[data-copy]").forEach(b => b.
 }));
 copyButtons(document);
 
+// ---- the message form on /me/ (listened for on the document, so it also works after a swipe brings the page in)
+document.addEventListener("submit", e => {
+  const f = e.target.closest("[data-contact]");
+  if (!f) return;
+  e.preventDefault();
+  const note = f.querySelector(".note"), btn = f.querySelector("button");
+  btn.disabled = true; note.textContent = "در حال فرستادن…";
+  fetch(f.action, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(f))) })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => { if (!d.ok) throw 0; f.reset(); note.textContent = "رسید؛ ممنون."; })
+    .catch(() => { note.textContent = "نرسید؛ دوباره امتحان کن."; })
+    .finally(() => { btn.disabled = false; });
+});
+{ // back from the form's plain post, when JavaScript was off
+  const sent = new URLSearchParams(location.search).get("sent"), note = document.querySelector("[data-contact] .note");
+  if (sent && note) note.textContent = sent === "1" ? "رسید؛ ممنون." : "نرسید؛ دوباره امتحان کن.";
+}
+
 // ---- justification: kashida + word spacing
 // We break each paragraph into lines ourselves. A line may pull in one more word by
 // tightening its spaces a little; otherwise the leftover gap is split between kashida

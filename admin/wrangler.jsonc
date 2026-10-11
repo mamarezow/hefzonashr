@@ -3,6 +3,6 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
   "assets": { "directory": "./public", "binding": "ASSETS" },
-  // GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are set in the Cloudflare dashboard; keep them on deploy
+  // GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set in the Cloudflare dashboard; keep them on deploy
   "keep_vars": true
 }
