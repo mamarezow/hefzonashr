@@ -133,7 +133,8 @@ document.addEventListener("copy", e => {
 // The sections form a ring: home (it has no button), then the pills in order; home sits
 // past both ends. On a post, a swipe does what the arrow buttons under it do. Each
 // neighbouring page is fetched ahead of time and slides in beside this one, following
-// the finger 1:1; a quick flick is enough. The address and history follow, so back,
+// the finger 1:1, and the yellow marker glides between the pills with it; a quick flick is
+// enough. The address and history follow, so back,
 // forward and sharing work as if the page was opened by its link.
 (() => {
   const nav = document.querySelector(".pills"), pills = nav ? [...nav.querySelectorAll("a")] : [];
@@ -170,8 +171,22 @@ document.addEventListener("copy", e => {
   const warm = () => idle(() => [1, -1].map(toward).forEach(u => u && load(u)));
   warm();
 
+  // the marker: a yellow block under the pills that glides from one to the next (home has none, so it fades)
+  const mark = document.createElement("i");
+  mark.className = "mark"; mark.setAttribute("aria-hidden", "true"); nav && nav.prepend(mark);
+  const pillOf = href => pills.find(a => a.getAttribute("href") === href);
+  const box = a => { const r = a.getBoundingClientRect(), n = nav.getBoundingClientRect(); return [r.left - n.left, r.top - n.top, r.width, r.height]; };
+  function markAt(from, to, t) {
+    const fa = pillOf(from), ta = pillOf(to), A = fa ? box(fa) : null, B = ta ? box(ta) : null, a = A || B, b = B || A;
+    if (!a) return;
+    const v = a.map((x, k) => x + (b[k] - x) * t);
+    Object.assign(mark.style, { transform: `translate(${v[0]}px,${v[1]}px)`, width: v[2] + "px", height: v[3] + "px", opacity: String((A ? 1 - t : 0) + (B ? t : 0)) });
+    pills.forEach(p => p.classList.toggle("lit", p === (t < 0.5 ? fa : ta)));
+  }
+  const unmark = () => { nav && nav.classList.remove("moving"); mark.style.transition = "none"; mark.style.opacity = "0"; pills.forEach(a => a.classList.remove("lit")); };
+
   // put a page in place of the current one: the copy that slid in, or one rebuilt from its HTML
-  let other = null;
+  let other = null, curPill = here.pill, toPill = null;
   function show(url, page, push) {
     const m = main(), r = m.getBoundingClientRect(), docTop = r.top + scrollY;
     if (other) { m.replaceChildren(...other.childNodes); other.remove(); other = null; }
@@ -180,6 +195,7 @@ document.addEventListener("copy", e => {
     copyButtons(m);
     if (r.top < 0) scrollTo(0, docTop);
     pills.forEach(a => { const on = a.getAttribute("href") === page.pill; a.classList.toggle("on", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
+    curPill = page.pill; unmark();
     if (push) history.pushState({ swiped: 1 }, "", url);
     warm();
   }
@@ -199,6 +215,7 @@ document.addEventListener("copy", e => {
   const pose = q => {
     m.style.transform = `translate3d(${side * W * q}px,0,0)`;
     if (other) other.style.transform = `translate3d(${side * W * (q - 1)}px,0,0)`;
+    markAt(curPill, toPill, Math.max(0, Math.min(1, q)));
   };
   const MV = { passive: false };   // only on while a finger that may swipe is down, so ordinary scrolling never waits for it
   addEventListener("touchstart", e => {
@@ -224,7 +241,9 @@ document.addEventListener("copy", e => {
         Object.assign(other.style, { position: "fixed", top: top + "px", left: r.left + "px", width: r.width + "px", height: innerHeight - top + "px", overflow: "hidden", pointerEvents: "none", margin: "0", willChange: "transform" });
         m.after(other); justifyAll(other);
       } else if (target) load(target);
+      toPill = page ? page.pill : pillOf(target) ? target : null;
       m.style.willChange = "transform"; m.style.transition = "none";
+      nav && nav.classList.add("moving"); mark.style.transition = "none";
       sx = x - (mx > 0 ? 6 : -6);   // start from where the finger is now: no jump
       lock = true;
     }
@@ -243,12 +262,13 @@ document.addEventListener("copy", e => {
     const ms = calm() ? 0 : Math.round(Math.max(200, Math.min(420, left * W / Math.max(Math.abs(v), 1) * 1.5)));
     busy = true;
     [m, other].forEach(n => n && (n.style.transition = `transform ${ms}ms ${SPRING}`));
+    mark.style.transition = ["transform", "width", "height", "opacity"].map(k => `${k} ${ms}ms ${SPRING}`).join();
     pose(commit ? 1 : 0);
     setTimeout(() => {
       busy = false;
       if (commit && other) show(target, ready.get(target), true);
       else if (commit) location.href = target;
-      else { if (other) { other.remove(); other = null; } m.style.cssText = ""; }
+      else { if (other) { other.remove(); other = null; } m.style.cssText = ""; unmark(); }
     }, ms + 20);
   }
   addEventListener("touchend", end); addEventListener("touchcancel", end);
