@@ -154,9 +154,11 @@ class Bot {
       const path = `src/posts/${s.slug}.md`;
       if (await getFile(this.env, path)) { s.step = "slug"; await this.save(s); return this.say("این نشانی همین حالا گرفته شد؛ نشانی دیگری بفرست.", ASKING); }
       p.date = tehranNow();
+      p.telegram = await this.nextShort();
       await putFile(this.env, path, render(p), `New post: ${p.title} (from Telegram)`);
+      await this.env.BOT.put("short", String(p.telegram));
       await this.forget();
-      return this.say(`منتشر شد. تا یکی دو دقیقهٔ دیگر اینجاست:\n${SITE}/posts/${s.slug}/`, MENU);
+      return this.say(`منتشر شد. تا یکی دو دقیقهٔ دیگر اینجاست:\n${SITE}/posts/${s.slug}/\nلینک کوتاه: ${SITE.replace("https://", "")}/p/${p.telegram}`, MENU);
     }
     if (what === "slug" && s.step === "review") {
       await answer(); await close();
@@ -250,6 +252,16 @@ class Bot {
       file = slug && await getFile(this.env, `src/posts/${slug}.md`);
     }
     return file ? { slug, sha: file.sha, post: parse(file.text) } : null;
+  }
+
+  // the next short link /p/<n>: one past the highest the site has (/p/last.txt) or this bot gave out
+  // (remembered, since the site takes a minute to rebuild after a post)
+  async nextShort() {
+    const r = await fetch(SITE + "/p/last.txt", { cf: { cacheTtl: 0 } }).catch(() => null);
+    const site = r?.ok ? parseInt(await r.text(), 10) || 0 : 0;
+    const mine = parseInt(await this.env.BOT.get("short") || "0", 10);
+    if (!site && !mine) throw new Error("آخرین لینک کوتاه پیدا نشد.");
+    return Math.max(site, mine) + 1;
   }
 
   // a default address for a new post, from today's date; Mamareza can change it before publishing

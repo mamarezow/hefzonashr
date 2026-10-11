@@ -1,0 +1,8 @@
+---
+permalink: /p/last.txt
+eleventyExcludeFromCollections: true
+---
+{#- the highest short-link number in use; the Telegram bot gives a new post the next one -#}
+{%- set last = 0 -%}
+{%- for p in collections.shortlinked %}{% if p.data.telegram > last %}{% set last = p.data.telegram %}{% endif %}{% endfor -%}
+{{ last }}
