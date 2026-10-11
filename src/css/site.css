@@ -52,7 +52,7 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .pills.moving a.lit { color: var(--on-accent); }
 
 .tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.tag { text-decoration: none; font-size: .74rem; line-height: 1.8; padding: 0 8px; border-radius: 7px; border: 1px solid var(--rule); color: var(--ink); }
+.tag { white-space: nowrap; text-decoration: none; font-size: .74rem; line-height: 1.8; padding: 0 8px; border-radius: 7px; border: 1px solid var(--rule); color: var(--ink); }
 .tag:hover { border-color: var(--accent); }
 .ibtn { width: 38px; height: 38px; display: inline-grid; place-items: center; border-radius: 12px; border: 1px solid var(--rule); background: transparent; color: var(--ink); cursor: pointer; padding: 0; text-decoration: none; }
 .ibtn:hover { border-color: var(--accent); }
@@ -111,7 +111,7 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 .contact { position: relative; }
 .contact .hp { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); }
 .contact .row { display: flex; align-items: center; gap: 10px; }
-.contact button { font: inherit; font-size: .74rem; background: transparent; cursor: pointer; }
+.contact button { white-space: nowrap; font: inherit; font-size: .74rem; background: transparent; cursor: pointer; }
 .contact button:disabled { opacity: .5; cursor: default; }
 .contact .note { font-size: .8rem; color: var(--muted); }
 /* the comment box under a post: the text full width, then the button and the sender in one row */
