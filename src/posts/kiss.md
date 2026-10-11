@@ -1,6 +1,6 @@
 ---
 title: "بوسه"
-date: 2026-10-11T14:13:37+03:30
+date: 2026-06-08T14:13:37+03:30
 telegram: 214
 form: poem
 tags: [poem]
