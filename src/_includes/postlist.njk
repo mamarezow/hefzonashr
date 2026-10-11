@@ -3,7 +3,7 @@
   <li>
     <h2><a href="{{ post.url }}">{{ post.data.title }}</a></h2>
     <p>{{ post | teaser }}</p>
-    <div class="meta"><time datetime="{{ post.date | iso }}">{{ post.date | jdate }}</time><a class="tag" href="{{ post.url }}" aria-label="خواندن {{ post.data.title }}">خواندن</a></div>
+    <div class="meta"><a class="tag" href="{{ post.url }}" aria-label="خواندن {{ post.data.title }}">خواندن</a><time datetime="{{ post.date | iso }}">{{ post.date | jdate }}</time></div>
   </li>
 {%- endfor %}
 </ul>
