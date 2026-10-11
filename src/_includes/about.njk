@@ -1,7 +1,7 @@
 {%- extends "base.njk" -%}
 {%- block main %}<div class="about"><h1 class="sr">{{ title }}</h1>{{ content | safe }}
 <form class="contact" id="contact" method="post" action="https://admin.hefzonashr.ir/contact" data-contact>
-  <textarea name="message" required maxlength="4000" rows="4" placeholder="متن پیام" aria-label="متن پیام"></textarea>
+  <textarea name="message" dir="auto" required maxlength="4000" rows="4" placeholder="متن پیام" aria-label="متن پیام"></textarea>
   <input name="email" type="text" maxlength="254" dir="ltr" placeholder="ایمیل یا شناسه تلگرام (اختیاری)" aria-label="ایمیل یا شناسه تلگرام (اختیاری)" autocomplete="email" autocapitalize="off" spellcheck="false">
   <input name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <div class="row"><button class="tag" type="submit">ارسال پیام</button><span class="note" role="status" aria-live="polite"></span>

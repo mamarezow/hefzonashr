@@ -43,7 +43,7 @@
 </nav>
 {#- a comment goes to Mamareza's Telegram, like the message form on /me/ (admin/src/contact.js) #}
 <form class="contact comment" id="comment" method="post" action="https://admin.hefzonashr.ir/contact" data-contact>
-  <textarea name="message" required maxlength="4000" rows="3" placeholder="متن کامنت شما" aria-label="متن کامنت شما"></textarea>
+  <textarea name="message" dir="auto" required maxlength="4000" rows="3" placeholder="متن کامنت شما" aria-label="متن کامنت شما"></textarea>
   <div class="row"><button class="tag" type="submit">ارسال پیام</button><input name="email" type="text" maxlength="254" dir="ltr" placeholder="ایمیل یا شناسه تلگرام (اختیاری)" aria-label="ایمیل یا شناسه تلگرام (اختیاری)" autocomplete="email" autocapitalize="off" spellcheck="false"></div>
   <span class="note" role="status" aria-live="polite"></span>
   <input type="hidden" name="post" value="{{ (site.domain + '/p/' + telegram) if telegram else (site.domain + page.url) }}">
