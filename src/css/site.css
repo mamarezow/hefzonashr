@@ -138,8 +138,10 @@ footer.foot span { display: block; border-top: 1px solid var(--rule); padding-to
 @media (min-width: 1000px) {
   body { font-size: 17.5px; }
   .col { max-width: 42rem; }
+  .body { font-size: 14.5px; }   /* a post's text: smaller than the rest on desktop (Mamareza, 2026-10-11) */
 }
 @media (min-width: 1400px) {
   body { font-size: 18.5px; }
   .col { max-width: 46rem; }
+  .body { font-size: 15px; }
 }
