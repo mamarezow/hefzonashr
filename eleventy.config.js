@@ -38,7 +38,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("teaser", post => {
     if (post.data.excerpt) return post.data.excerpt;
     const line = (post.rawInput || "").split("\n").map(s => s.replace(/[‏‎]/g, "").trim()).find(Boolean) || "";
-    const plain = line.replace(/[*_`#>\[\]]/g, "");
+    // Markdown left out: links keep their text, a line-break "\" goes
+    const plain = line.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\\$/, "").replace(/[*_`#>\[\]]/g, "").trim();
     if (plain.length <= 160) return plain;
     return plain.slice(0, plain.lastIndexOf(" ", 160)) + "…";
   });
