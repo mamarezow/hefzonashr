@@ -321,8 +321,13 @@ export function markdown(text, entities = []) {
   return text;
 }
 
-// every line of a prose message is its own paragraph on the site
-const paragraphs = text => text.split(/\n+/).map(l => l.trim()).filter(Boolean).join("\n\n");
+// a prose message as Markdown paragraphs: a block of short lines (verse inside prose, between
+// blank lines) keeps its line breaks (a "\" at a line's end); any other line is its own paragraph
+const VERSE_LINE = 70;
+const paragraphs = text => text.split(/\n[ \t]*\n/).flatMap(block => {
+  const lines = block.split("\n").map(l => l.trim().replace(/\\$/, "").trimEnd()).filter(Boolean);
+  return lines.length > 1 && lines.every(l => l.length <= VERSE_LINE) ? [lines.join("\\\n")] : lines;
+}).join("\n\n");
 const oneLine = text => text.replace(/\s+/g, " ").trim();
 const sectionOf = tags => SECTIONS.find(x => x.tags.some(t => tags.includes(t))) || SECTIONS[3];
 const tagNames = tags => tags.map(t => TAGS[t] || t).join("، ");
