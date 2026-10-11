@@ -69,6 +69,13 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .list p { margin: 0 0 2px; color: var(--muted); font-size: .94rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .list .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; }
 .meta { font-size: .82rem; color: var(--muted); }
+/* the "not found" page: a quiet number, one line, one way back */
+main:has(> .lost) { flex: 1; display: flex; flex-direction: column; }
+.lost { margin: auto; padding: 32px 0 48px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.lost .code { margin: 0; font-size: 3rem; font-weight: 400; line-height: 1; color: var(--ink); letter-spacing: .08em; padding: 18px 26px; border: 1px dashed var(--rule); border-radius: 18px; }
+.lost h1 { margin: 6px 0 4px; font-size: 1.05rem; font-weight: 600; }
+.lost .home { white-space: nowrap; text-decoration: none; font-size: .84rem; line-height: 2.2; padding: 0 16px; border-radius: 9px; background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent); }
+.lost .home:hover { filter: brightness(.96); }
 .empty { margin-top: 26px; text-align: center; color: var(--muted); }
 .more { margin-top: 18px; display: flex; justify-content: center; gap: 10px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
