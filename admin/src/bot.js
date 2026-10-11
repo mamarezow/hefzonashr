@@ -94,7 +94,7 @@ class Bot {
           return this.review(s);
         }
         if (!m.text) return this.say("فقط متن می‌شود فرستاد؛ عکس و فایل نه.");
-        s.parts.push(p.form === "poem" ? m.text.replace(/\s+$/, "") : paragraphs(markdown(m.text, m.entities)));
+        s.parts.push(p.form === "poem" ? m.text.replace(/\s+$/, "") : paragraphs(markdown(m.text, m.entities, await linkNames(m.text, m.entities))));
         await this.save(s);
         return tg(this.env, "setMessageReaction", { chat_id: this.chat, message_id: m.message_id, reaction: [{ type: "emoji", emoji: "👍" }] });
       case "slug": {
@@ -304,7 +304,7 @@ const scalar = v => {
 };
 
 // Telegram's bold, italic and links as Markdown
-export function markdown(text, entities = []) {
+export function markdown(text, entities = [], names = {}) {
   const marks = [];
   for (const e of entities) {
     let a = e.offset, b = e.offset + e.length;
@@ -314,12 +314,34 @@ export function markdown(text, entities = []) {
     if (e.type === "bold") marks.push([a, "**", 0], [b, "**", 1]);
     else if (e.type === "italic") marks.push([a, "*", 0], [b, "*", 1]);
     else if (e.type === "text_link") marks.push([a, "[", 0], [b, `](${e.url})`, 1]);
+    // a bare address becomes a link named after its page: [name](address)
+    else if (e.type === "url") marks.push([a, `[${names[a] || host(text.slice(a, b))}](` + (/^https?:\/\//i.test(text.slice(a, b)) ? "" : "https://"), 0], [b, ")", 1]);
   }
   // from the end, so earlier offsets stay right; at one spot a closing mark goes before an opening one
   marks.sort((x, y) => y[0] - x[0] || x[2] - y[2]);
   for (const [at, mark] of marks) text = text.slice(0, at) + mark + text.slice(at);
   return text;
 }
+
+const host = url => url.replace(/^https?:\/\//i, "").split(/[/?#]/)[0].replace(/^www\./, "");
+
+// the page titles of the bare addresses in a message, by offset; the site shows links as buttons
+async function linkNames(text, entities = []) {
+  const names = {};
+  await Promise.all(entities.filter(e => e.type === "url").slice(0, 5).map(async e => {
+    let url = text.slice(e.offset, e.offset + e.length);
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    try {
+      const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; hefzonashr-bot)" }, signal: AbortSignal.timeout(4000) });
+      const html = (await r.text()).slice(0, 200000);
+      const title = (html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) || html.match(/<title[^>]*>([^<]+)/i))?.[1];
+      if (title) names[e.offset] = decode(title).replace(/\s+/g, " ").replace(/[[\]]/g, "").trim();
+    } catch {}
+  }));
+  return names;
+}
+const decode = s => s.replace(/&(#x?[0-9a-f]+|amp|lt|gt|quot|apos|#39);/gi, (m, c) =>
+  c[0] === "#" ? String.fromCodePoint(c[1].toLowerCase() === "x" ? parseInt(c.slice(2), 16) : +c.slice(1)) : { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[c.toLowerCase()] ?? m);
 
 // a prose message as Markdown paragraphs: a block of short lines (verse inside prose, between
 // blank lines) keeps its line breaks (a "\" at a line's end); any other line is its own paragraph
