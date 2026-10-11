@@ -27,6 +27,12 @@ const copyButtons = root => root.querySelectorAll("[data-copy]").forEach(b => b.
 }));
 copyButtons(document);
 
+// the message text follows the writer's language: its first letter sets the direction; empty, it reads from the right
+// (done here rather than with dir=auto, which hid the placeholder in some desktop browsers)
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.matches && t.matches("[data-contact] textarea")) t.dir = /^[^A-Za-z\u00C0-\u024F\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]*[A-Za-z\u00C0-\u024F]/.test(t.value) ? "ltr" : "rtl";
+});
 document.addEventListener("focusin", e => { const f = e.target.closest && e.target.closest("[data-contact]"); if (f && !f.dataset.began) f.dataset.began = Date.now(); });
 // ---- the message form on /me/ (listened for on the document, so it also works after a swipe brings the page in)
 document.addEventListener("submit", e => {
@@ -43,7 +49,7 @@ document.addEventListener("submit", e => {
   const ms = Date.now() - (+f.dataset.began || Date.now());
   fetch(f.action, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...Object.fromEntries(new FormData(f)), ms }) })
     .then(r => r.status === 429 ? Promise.reject(429) : r.ok ? r.json() : Promise.reject())
-    .then(d => { if (!d.ok) throw 0; f.reset(); delete f.dataset.began; note.textContent = "رسید؛ ممنون!"; })
+    .then(d => { if (!d.ok) throw 0; f.reset(); f.elements.message.dir = "rtl"; delete f.dataset.began; note.textContent = "رسید؛ ممنون!"; })
     .catch(e => { note.textContent = e === 429 ? "پیام‌ها زیاد شده؛ کمی بعد دوباره امتحان کن." : "نرسید؛ دوباره امتحان کن."; })
     .finally(() => { btn.disabled = false; });
 });

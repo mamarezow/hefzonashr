@@ -107,8 +107,6 @@ article > header h2 { font-size: .98rem; font-weight: 400; color: var(--muted); 
 .contact { margin-top: 26px; padding-top: 20px; border-top: 1px dashed var(--rule); display: flex; flex-direction: column; gap: 8px; text-align: start; }
 .contact textarea, .contact input { font: inherit; font-size: .9rem; color: var(--fg); background: transparent; border: 1px solid var(--rule); border-radius: 9px; padding: 7px 11px; width: 100%; resize: none; }
 .contact input[dir="ltr"]::placeholder { direction: rtl; text-align: right; }
-/* the text follows the writer's language (dir=auto); empty, it starts from the right like the placeholder */
-.contact textarea:placeholder-shown { direction: rtl; }
 .contact textarea:focus, .contact input:focus { outline: none; border-color: var(--accent); }
 .contact ::placeholder { color: var(--muted); opacity: .8; }
 .contact { position: relative; }
