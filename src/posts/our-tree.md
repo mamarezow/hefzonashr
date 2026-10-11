@@ -1,6 +1,6 @@
 ---
 title: "درختمان"
-date: 2026-10-11T14:31:12+03:30
+date: 2025-06-09T14:31:12+03:30
 telegram: 215
 form: poem
 tags: [poem]
