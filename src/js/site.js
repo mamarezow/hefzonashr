@@ -1,4 +1,4 @@
-// حفظ و نشر آثار: theme switch, short-link copy, justification
+// حفظ و نشر آثار: theme switch, short-link copy, justification, section swipe
 
 const root = document.documentElement;
 const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
@@ -126,3 +126,139 @@ document.addEventListener("copy", e => {
   e.clipboardData.setData("text/plain", text);
   e.preventDefault();
 });
+
+// ---- phones: swipe sideways between the sections, like the tabs of a phone app
+// The sections form a ring: home (it has no button), then the pills in order; home sits
+// past both ends. Each neighbour's page is fetched ahead of time and slides in beside this
+// one, following the finger 1:1, and the yellow marker moves between the pills with it;
+// a quick flick is enough. The address and history follow, so back, forward and sharing
+// work as if the section was opened by its link.
+(() => {
+  const nav = document.querySelector(".pills"), pills = nav ? [...nav.querySelectorAll("a")] : [];
+  const ring = ["/", ...pills.map(a => a.getAttribute("href"))];
+  const indexOf = path => /^\/(page\/\d+\/)?$/.test(path) ? 0 : ring.indexOf(path);
+  const main = () => document.querySelector("main");
+  let cur = indexOf(location.pathname);
+  if (cur < 0 || !main() || !matchMedia("(pointer: coarse)").matches) return;
+  const rtl = document.documentElement.dir === "rtl";
+  const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const SPRING = "cubic-bezier(.22,1,.36,1)";
+
+  // pages by address: what's loaded is in `ready`, so a swipe never waits
+  const pages = new Map(), ready = new Map();
+  const load = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject()).then(t => {
+      const d = new DOMParser().parseFromString(t, "text/html"), v = { html: d.querySelector("main").innerHTML, title: d.title };
+      ready.set(url, v); return v;
+    }).catch(() => { pages.delete(url); return null; }));
+    return pages.get(url);
+  };
+  const here = { html: main().innerHTML, title: document.title };
+  ready.set(location.pathname, here); pages.set(location.pathname, Promise.resolve(here));
+  const idle = window.requestIdleCallback || (f => setTimeout(f, 300));
+  const warm = () => idle(() => [1, -1].forEach(d => load(ring[(cur + d + ring.length) % ring.length])));
+  warm();
+
+  // the marker: a yellow block under the pills that glides from one to the next (home has none, so it fades)
+  const mark = document.createElement("i");
+  mark.className = "mark"; mark.setAttribute("aria-hidden", "true"); nav.prepend(mark);
+  const box = a => { const r = a.getBoundingClientRect(), n = nav.getBoundingClientRect(); return [r.left - n.left, r.top - n.top, r.width, r.height]; };
+  function markAt(i, j, t) {
+    const A = i ? box(pills[i - 1]) : null, B = j ? box(pills[j - 1]) : null, a = A || B, b = B || A;
+    const v = a.map((x, k) => x + (b[k] - x) * t);
+    Object.assign(mark.style, { transform: `translate(${v[0]}px,${v[1]}px)`, width: v[2] + "px", height: v[3] + "px", opacity: String((i ? 1 - t : 0) + (j ? t : 0)) });
+    pills.forEach((p, k) => p.classList.toggle("lit", k + 1 === (t < 0.5 ? i : j)));
+  }
+
+  // put section i in place of the current one
+  let other = null;
+  function show(i, url, page) {
+    const m = main(), r = m.getBoundingClientRect(), docTop = r.top + scrollY;
+    m.innerHTML = page.html; m.style.cssText = ""; document.title = page.title;
+    if (other) { other.remove(); other = null; }
+    if (r.top < 0) scrollTo(0, docTop);
+    pills.forEach((a, k) => { const on = k + 1 === i; a.classList.toggle("on", on); a.classList.remove("lit"); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
+    nav.classList.remove("moving"); mark.style.transition = "none"; mark.style.opacity = "0";
+    cur = i;
+    if (url) history.pushState({ ring: i }, "", url);
+    warm();
+  }
+  history.replaceState({ ring: cur }, "");
+  addEventListener("popstate", e => {
+    if (!e.state || e.state.ring == null) return;
+    const i = indexOf(location.pathname);
+    load(location.pathname).then(pg => pg ? show(i, null, pg) : location.reload());
+  });
+
+  // the finger
+  const scrollsX = n => { for (; n && n !== document.body; n = n.parentElement) { const o = getComputedStyle(n).overflowX; if ((o === "auto" || o === "scroll") && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
+  // how fast the finger was going at the end (px per ms), from its last moments only: a held finger is not a flick
+  let samples = [];
+  const flick = () => { const now = performance.now(), rec = samples.filter(q => now - q[0] < 120), a = rec[0], b = rec.at(-1); return a && b && b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0; };
+  let sx = null, sy = 0, lock = false, startTg = null, busy = false, m = null, target = 0, side = 1, W = 0, p = 0;
+  const pose = q => {
+    m.style.transform = `translate3d(${side * W * q}px,0,0)`;
+    if (other) other.style.transform = `translate3d(${side * W * (q - 1)}px,0,0)`;
+    markAt(cur, target, Math.max(0, Math.min(1, q)));
+  };
+  const MV = { passive: false };   // only on while a finger that may swipe is down, so ordinary scrolling never waits for it
+  addEventListener("touchstart", e => {
+    sx = null; if (busy || e.touches.length > 1) return;
+    const t = e.touches[0];
+    // the screen edges belong to the browser's own back swipe; a zoomed-in page pans instead
+    if (t.clientX < 20 || t.clientX > innerWidth - 20 || (window.visualViewport && visualViewport.scale > 1.01)) return;
+    startTg = e.target; sx = t.clientX; sy = t.clientY; lock = false; samples = [];
+    addEventListener("touchmove", mv, MV);
+  }, { passive: true });
+  function mv(e) {
+    if (sx == null || (!lock && e.touches.length > 1)) { sx = null; removeEventListener("touchmove", mv, MV); return; }
+    const x = e.touches[0].clientX, mx = x - sx, my = e.touches[0].clientY - sy;
+    if (!lock) {
+      if (Math.hypot(mx, my) < 6) return;
+      if (Math.abs(mx) <= Math.abs(my) * 1.2 || scrollsX(startTg) || String(getSelection())) { sx = null; return; }
+      side = mx < 0 ? -1 : 1;
+      // pills run right to left, so a swipe to the right brings in the next one from the left
+      target = (cur + ((side > 0) === rtl ? 1 : -1) + ring.length) % ring.length;
+      m = main(); W = innerWidth;
+      const r = m.getBoundingClientRect(), top = Math.max(r.top, 0), page = ready.get(ring[target]);
+      if (page) {
+        other = document.createElement("main");
+        other.innerHTML = page.html; other.setAttribute("aria-hidden", "true");
+        Object.assign(other.style, { position: "fixed", top: top + "px", left: r.left + "px", width: r.width + "px", height: innerHeight - top + "px", overflow: "hidden", pointerEvents: "none", margin: "0", willChange: "transform" });
+        m.after(other);
+      } else load(ring[target]);
+      m.style.willChange = "transform"; m.style.transition = "none";
+      nav.classList.add("moving"); mark.style.transition = "none";
+      sx = x - (mx > 0 ? 6 : -6);   // start from where the finger is now: no jump
+      lock = true;
+    }
+    if (e.cancelable) e.preventDefault();
+    let dx = x - sx; if (dx * side < 0) dx /= 4;   // pulled back past the start: barely moves
+    p = dx * side / W; if (!other) p /= 3;         // next page not loaded yet: give a little
+    samples.push([performance.now(), x]); if (samples.length > 6) samples.shift();
+    pose(p);
+  }
+  function end() {
+    removeEventListener("touchmove", mv, MV);
+    if (sx == null) return; sx = null; if (!lock) return; lock = false;
+    const v = flick() * side, q = Math.max(0, p) * (other ? 1 : 3);
+    const commit = (q > 0.3 || (v > 0.3 && q > 0.04)) && v > -0.2;
+    const left = commit ? 1 - q : q;
+    const ms = calm() ? 0 : Math.round(Math.max(200, Math.min(420, left * W / Math.max(Math.abs(v), 1) * 1.5)));
+    busy = true;
+    [m, other].forEach(n => n && (n.style.transition = `transform ${ms}ms ${SPRING}`));
+    mark.style.transition = ["transform", "width", "height", "opacity"].map(k => `${k} ${ms}ms ${SPRING}`).join();
+    pose(commit ? 1 : 0);
+    setTimeout(() => {
+      busy = false;
+      if (commit && other) show(target, ring[target], ready.get(ring[target]));
+      else if (commit) location.href = ring[target];
+      else {
+        if (other) { other.remove(); other = null; }
+        m.style.cssText = ""; nav.classList.remove("moving"); mark.style.transition = "none"; mark.style.opacity = "0";
+        pills.forEach(a => a.classList.remove("lit"));
+      }
+    }, ms + 20);
+  }
+  addEventListener("touchend", end); addEventListener("touchcancel", end);
+})();
