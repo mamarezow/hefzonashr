@@ -8,14 +8,14 @@
 // Opening https://admin.hefzonashr.ir/telegram/setup once points Telegram at /telegram.
 import { ACCOUNT, accountMessage, accountPress } from "./accounts.js";
 const REPO = "mamarezow/hefzonashr", BRANCH = "main", SITE = "https://hefzonashr.ir";
-const SECTIONS = [
+export const SECTIONS = [
   { key: "essay", label: "جستار", form: "prose", tags: ["essay"] },
   { key: "note", label: "یادداشت", form: "prose", tags: ["note"] },
   { key: "poeticwords", label: "شاعرانه", form: "poem", tags: ["poem", "song"] },
   { key: "otherthings", label: "چیزهای دیگر", form: "prose", tags: ["otherthings"] }
 ];
 // the same tags as src/_data/site.js
-const TAGS = { essay: "جستار", note: "یادداشت", poem: "شعر", song: "ترانه", critique: "نقد", intro: "معرفی", otherthings: "دیگر" };
+export const TAGS = { essay: "جستار", note: "یادداشت", poem: "شعر", song: "ترانه", critique: "نقد", intro: "معرفی", otherthings: "دیگر" };
 const NEW = "new post", EDIT = "edit post", DELETE = "delete post", DONE = "تمام", CANCEL = "لغو";
 const MENU = { keyboard: [[{ text: NEW }, { text: EDIT }], [{ text: DELETE }, { text: ACCOUNT }]], resize_keyboard: true, is_persistent: true };
 const WRITING = { keyboard: [[{ text: DONE }, { text: CANCEL }]], resize_keyboard: true, is_persistent: true };
@@ -59,7 +59,7 @@ export async function onRequest({ request, env }) {
   return new Response("ok");                  // always 200, or Telegram sends the same update again
 }
 
-class Bot {
+export class Bot {
   constructor(env, chat) { this.env = env; this.chat = chat; this.key = "chat:" + chat; }
   say(text, reply_markup) { return tg(this.env, "sendMessage", { chat_id: this.chat, text, reply_markup, link_preview_options: { is_disabled: true } }); }
   async load() { return JSON.parse(await this.env.BOT.get(this.key) || "null"); }
@@ -400,12 +400,12 @@ const decode = s => s.replace(/&(#x?[0-9a-f]+|amp|lt|gt|quot|apos|#39);/gi, (m, 
 // a prose message as Markdown paragraphs: a block of short lines (verse inside prose, between
 // blank lines) keeps its line breaks (a "\" at a line's end); any other line is its own paragraph
 const VERSE_LINE = 70;
-const paragraphs = text => text.split(/\n[ \t]*\n/).flatMap(block => {
+export const paragraphs = text => text.split(/\n[ \t]*\n/).flatMap(block => {
   const lines = block.split("\n").map(l => l.trim().replace(/\\$/, "").trimEnd()).filter(Boolean);
   return lines.length > 1 && lines.every(l => l.length <= VERSE_LINE) ? [lines.join("\\\n")] : lines;
 }).join("\n\n");
 const oneLine = text => text.replace(/\s+/g, " ").trim();
-const sectionOf = tags => SECTIONS.find(x => x.tags.some(t => tags.includes(t))) || SECTIONS[3];
+export const sectionOf = tags => SECTIONS.find(x => x.tags.some(t => tags.includes(t))) || SECTIONS[3];
 // a post's address on the site, under its section (src/posts/posts.11tydata.js)
 // (its `address` if it has one, else the file name)
 const postUrl = s => `${SITE}/${sectionOf(s.post.tags).key}/${s.post.address || s.slug}/`;
@@ -465,7 +465,7 @@ function newDate(old, text) {
   const time = (old.match(/T(\d\d:\d\d:\d\d)/) || [, "12:00:00"])[1];
   return `${g}T${time}+03:30`;
 }
-const tehranNow = () => new Date(Date.now() + 3.5 * 3600e3).toISOString().slice(0, 19) + "+03:30";
+export const tehranNow = () => new Date(Date.now() + 3.5 * 3600e3).toISOString().slice(0, 19) + "+03:30";
 
 // ---- Telegram and GitHub ----
 
@@ -489,7 +489,7 @@ function github(env, path, init = {}) {
   });
 }
 
-async function getFile(env, path) {
+export async function getFile(env, path) {
   const r = await github(env, `contents/${path}?ref=${BRANCH}`);
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`GitHub ${r.status}`);
@@ -497,7 +497,7 @@ async function getFile(env, path) {
   return { sha: j.sha, text: new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g, "")), c => c.charCodeAt(0))) };
 }
 
-async function putFile(env, path, text, message, sha) {
+export async function putFile(env, path, text, message, sha) {
   const bytes = new TextEncoder().encode(text);
   let bin = "";
   for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));

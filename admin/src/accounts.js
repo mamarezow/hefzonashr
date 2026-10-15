@@ -157,6 +157,13 @@ export async function login({ request, env }) {
   return json({ token });
 }
 
+// the approved account behind a session token ("hz_…"), or null
+export async function sessionUser(env, token) {
+  if (!token.startsWith("hz_")) return null;
+  const name = await env.BOT.get("session:" + token), user = name && await getUser(env, name);
+  return user?.approved ? user : null;
+}
+
 // ---- the CMS's GitHub API ----
 
 export async function githubApi({ request, env }) {

@@ -291,7 +291,8 @@ document.addEventListener("copy", e => {
   };
   const MV = { passive: false };   // only on while a finger that may swipe is down, so ordinary scrolling never waits for it
   addEventListener("touchstart", e => {
-    sx = null; if (busy || e.touches.length > 1) return;
+    // not while a post is being edited on admin.hefzonashr.ir (admin/public/panel.js)
+    sx = null; if (busy || e.touches.length > 1 || document.documentElement.classList.contains("hz-editing")) return;
     const t = e.touches[0];
     // the screen edges belong to the browser's own back swipe; a zoomed-in page pans instead
     if (t.clientX < 20 || t.clientX > innerWidth - 20 || (window.visualViewport && visualViewport.scale > 1.01)) return;

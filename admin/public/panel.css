@@ -1,0 +1,21 @@
+/* the in-place editor on admin.hefzonashr.ir (panel.js), on top of the site's own site.css */
+.hz-bar { position: fixed; z-index: 50; bottom: max(14px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; max-width: calc(100vw - 32px);
+  padding: 6px; border-radius: 14px; background: var(--bg); border: 1px solid var(--rule); box-shadow: 0 2px 12px rgba(0, 0, 0, .12); font-family: Sahel, sans-serif; }
+.hz-b { font: inherit; font-size: .85rem; line-height: 1.9; padding: 1px 12px; border-radius: 9px; border: 1px solid var(--rule); background: transparent; color: var(--fg); cursor: pointer; text-decoration: none; }
+.hz-b:hover { border-color: var(--accent); }
+.hz-b.hz-main { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.hz-b.hz-quiet { color: var(--muted); }
+.hz-note { font-size: .78rem; color: var(--muted); padding-inline: 6px; line-height: 1.7; }
+.wrap { padding-bottom: 84px; }   /* room for the bar under the footer */
+
+.hz-field { outline: none; border-radius: 6px; transition: background .15s; }
+.hz-field:hover, .hz-field:focus { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.hz-field:empty::before { content: attr(data-ph); color: var(--muted); opacity: .7; }
+.hz-text { white-space: pre-wrap; min-height: 8em; text-align: right; }
+.hz-editing article header h2 { display: block; min-height: 1.5em; }
+.hz-editing .pn, .hz-editing .comment { display: none; }
+.hz-tag { font: inherit; font-size: .74rem; background: transparent; cursor: pointer; }
+.hz-tag.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.hz-address { font: .8rem "Sahel Latin", Sahel, sans-serif; padding: 2px 8px; border-radius: 7px; border: 1px solid var(--rule); background: transparent; color: var(--fg); width: 11rem; }
+.postfoot .row:has(.hz-address) { flex-wrap: wrap; gap: 8px; }

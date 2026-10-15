@@ -13,7 +13,7 @@
 {%- set shortUrl = site.domain + "/p/" + telegram -%}
 {%- set prev = collections.posts | older(page.url) -%}
 {%- set next = collections.posts | newer(page.url) -%}
-<article>
+<article data-file="{{ page.fileSlug }}">{# the post's file, for the in-place editor on admin.hefzonashr.ir #}
   <header>
     <h1>{{ title }}</h1>
     {%- if subtitle %}
